@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-cn">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="stylesheet" href="node_modules/@applemusic-like-lyrics/core/dist/style/lyric-player.module.css" />
+  <link rel="stylesheet" href="/src/css/main.css" media="(aspect-ratio > 1/1)" />
+  <link rel="stylesheet" href="/src/css/main_mobile.css" media="(aspect-ratio <= 1/1)" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spotify</title>
+</head>
+
+<body>
+  <div id="app">
+    <div id="background"><canvas id="draw_background"></canvas></div>
+    <div id="devtool">
+      <p>调试工具</p><canvas id="music_bar" height="600" width="800"></canvas>
+    </div>
+    <div id="container">
+
+      <div id="cover" src="res/spotify-logo.png"></div>
+      <div id="data_container">
+        <p id="name">name</p>
+        <p id="artist">artist</p>
+        <p id="album">album</p>
+
+        <div id="progress_group">
+          <!-- <input type="range" id="progress" min="0" max="100" value="0" step="0.1" style="width: 100%;" disabled> -->
+          <div id="progress">
+            <div id="progress_bar">
+
+            </div>
+          </div>
+          <div id="start">0:00</div>
+          <div id="end">-0:00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+
+</body>
+
+</html>

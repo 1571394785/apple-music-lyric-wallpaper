@@ -1,0 +1,396 @@
+#bg {
+    background-color: #ff9797;
+    height: 100vh;
+    z-index: -1;
+    width: 100vw;
+}
+
+body {
+    max-width: 100vw;
+    width: 100vw;
+    max-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    background: #222;
+    margin: 0;
+}
+
+#lyric-player {
+    z-index: 1;
+    max-height: 100vh;
+    height: 100vh;
+    max-width: 100vw;
+    width: 50vw;
+    overflow: hidden;
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin: 30px;
+}
+
+/* 覆盖 hover 时的 filter: unset，保持 blur 效果 */
+
+
+/* 左边 */
+#cover {
+    width: 100%;
+    height: 100%;
+    /* 图片cover显示 */
+    size: cover;
+    object-fit: cover;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-radius: 15px;
+    box-shadow: 0 5px 40px 5px rgba(0, 0, 0, 0.4);
+    /* 不允许拖动 */
+    -webkit-user-drag: none;
+    transition: 0.2s;
+    z-index: 999;
+}
+
+#container {
+    position: absolute;
+    top: 40%;
+    left: 25%;
+    width: 50vh;
+    height: 50vh;
+    transform: translateY(-50%) translateX(-50%);
+    transition: 1s;
+    perspective: 500px;
+    user-select: none;
+}
+
+#name {
+    color: white;
+    font-weight: 900;
+    font-size: 5vmin;
+    margin: 1vmax 1vmax 0 1vmax;
+    /* 不换行 */
+    white-space: nowrap;
+    overflow-y: hidden;
+    /* -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 2%, rgba(0,0,0,1) 98%, rgba(0,0,0,0) 100%); */
+}
+
+#name::-webkit-scrollbar {
+    display: none;
+}
+
+#artist {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 900;
+    font-size: 3vmin;
+    margin: 0 0 0 1vmax;
+    /* 不换行 */
+    white-space: nowrap;
+    overflow: hidden;
+    /* 超出部分模糊 */
+    text-overflow: ellipsis
+}
+
+#album {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 900;
+    font-size: 3vmin;
+    margin: 0 0 0 1vmax;
+    margin-bottom: 2vh;
+    /* 不换行 */
+    white-space: nowrap;
+    overflow: hidden;
+    /* 超出部分模糊 */
+    text-overflow: ellipsis
+}
+
+#progress {
+    width: 100%;
+    height: 1vmin;
+    border-radius: 1vmin;
+    backdrop-filter: blur(5px);
+    background-color: rgba(255, 255, 255, 0.6);
+}
+
+#progress_bar {
+    width: 0%;
+    height: 1vmin;
+    border-radius: 1vmin;
+    background-color: rgb(255, 255, 255);
+    transition: 1s ease;
+
+}
+
+#start {
+    float: left;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 900;
+    font-size: 1.2vmax;
+}
+
+#end {
+    float: right;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 900;
+    font-size: 1.2vmax;
+}
+
+#background {
+    position: fixed;
+    top: 0vmax;
+    left: 0vmax;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    transform: scale(1.5);
+    /* 渐变 */
+    filter: brightness(0.85);
+}
+
+#draw_background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#devtool {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: auto;
+    height: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 14px;
+    z-index: 1000;
+    display: block;
+    overflow: auto;
+}
+
+@keyframes move_bkg {
+    0% {
+        transform: scale(1.7) translateX(-20%) translateY(-20%);
+    }
+
+    25% {
+        transform: scale(1.7) translateX(-20%) translateY(20%);
+    }
+
+    50% {
+        transform: scale(1.7) translateX(20%) translateY(20%);
+    }
+
+    75% {
+        transform: scale(1.7) translateX(20%) translateY(-20%);
+    }
+
+    100% {
+        transform: scale(1.7) translateX(-20%) translateY(-20%);
+    }
+}
+
+#bg {
+    background-color: #ff9797;
+    height: 100vh;
+    z-index: -1;
+    width: 100vw;
+}
+
+body {
+    max-width: 100vw;
+    width: 100vw;
+    max-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    background: #222;
+    margin: 0;
+}
+
+#lyric-player {
+    z-index: 1;
+    max-height: 100vh;
+    height: 100vh;
+    max-width: 100vw;
+    width: 100vw;
+    overflow: hidden;
+    position: absolute;
+    top: calc(3vh + 20vw);
+    left: 0;
+    margin: 2px;
+    padding: 2px;
+}
+
+/* 覆盖 hover 时的 filter: unset，保持 blur 效果 */
+
+
+/* 左边 */
+#cover {
+    width: 100%;
+    height: 100%;
+    /* 图片cover显示 */
+    size: cover;
+    object-fit: cover;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-radius: 15px;
+    box-shadow: 0 5px 40px 5px rgba(0, 0, 0, 0.4);
+    /* 不允许拖动 */
+    -webkit-user-drag: none;
+    transition: 0.2s;
+    z-index: 999;
+}
+
+#container {
+    position: absolute;
+    top: 3vh;
+    left: 5%;
+    width: 20vw;
+    height: 20vw;
+    transform: translateX(0%);
+    transition: 1s;
+    perspective: 500px;
+    user-select: none;
+}
+
+#name {
+    color: white;
+    font-weight: 900;
+    font-size: 5vmin;
+    margin: 0;
+    /* 不换行 */
+    white-space: nowrap;
+    overflow-y: hidden;
+    /* 放到cover右边 */
+
+    /* -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 2%, rgba(0,0,0,1) 98%, rgba(0,0,0,0) 100%); */
+}
+
+#name::-webkit-scrollbar {
+    display: none;
+}
+
+#artist {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 900;
+    font-size: 3vmin;
+    margin: 0;
+    /* 不换行 */
+    white-space: nowrap;
+    overflow: hidden;
+    /* 超出部分模糊 */
+    text-overflow: ellipsis;
+
+}
+
+#album {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 900;
+    font-size: 3vmin;
+    margin: 0;
+    /* 不换行 */
+    white-space: nowrap;
+    overflow: hidden;
+    /* 超出部分模糊 */
+    text-overflow: ellipsis;
+
+}
+
+#data_container {
+    position: absolute;
+    /* 放到cover右边 */
+    left: calc(5% + 20vw);
+    top: 0;
+    width: calc(100vw - 5% - 20vw - 10vw);
+    height: 20vw;
+}
+
+#progress {
+    width: 100%;
+    height: 1vmin;
+    border-radius: 1vmin;
+    backdrop-filter: blur(5px);
+    background-color: rgba(255, 255, 255, 0.6);
+}
+
+#progress_bar {
+    width: 0%;
+    height: 1vmin;
+    border-radius: 1vmin;
+    background-color: rgb(255, 255, 255);
+    transition: 1s ease;
+
+}
+
+#start {
+    float: left;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 900;
+    font-size: 1.2vmax;
+}
+
+#end {
+    float: right;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 900;
+    font-size: 1.2vmax;
+}
+
+#background {
+    position: fixed;
+    top: 0vmax;
+    left: 0vmax;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    transform: scale(1.5);
+    /* 渐变 */
+    filter: brightness(0.85);
+}
+
+#draw_background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#devtool {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: auto;
+    height: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 14px;
+    z-index: 1000;
+    display: none;
+    overflow: auto;
+}
+
+@keyframes move_bkg {
+    0% {
+        transform: scale(1.7) translateX(-20%) translateY(-20%);
+    }
+
+    25% {
+        transform: scale(1.7) translateX(-20%) translateY(20%);
+    }
+
+    50% {
+        transform: scale(1.7) translateX(20%) translateY(20%);
+    }
+
+    75% {
+        transform: scale(1.7) translateX(20%) translateY(-20%);
+    }
+
+    100% {
+        transform: scale(1.7) translateX(-20%) translateY(-20%);
+    }
+}
