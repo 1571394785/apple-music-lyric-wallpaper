@@ -197,6 +197,7 @@ window.wallpaperPropertyListener = {
         if(properties.mohu){
             console.log("模糊效果改变", properties.mohu.value);
             window.mohu = properties.mohu.value;
+            player?.setEnableBlur(window.mohu);
         }
     }
 }
@@ -225,8 +226,8 @@ function changeinfo() {
     var start_div = document.getElementById("start");
     var end = document.getElementById("end");
     var bcg = document.getElementById("background");
-    if (name) name.innerText = window.song_data.name;
-    if (artist) artist.innerText = window.song_data.artist;
+    updateMarquee(name, window.song_data.name);
+    updateMarquee(artist, window.song_data.artist);
     if (album) album.innerText = window.song_data.album;
     if (cover) cover.style.backgroundImage = "url(" + window.song_data.cover + ")";
     if (progress_bar) progress_bar.style.width = window.song_data.progress_percent + "%";
@@ -247,6 +248,53 @@ function changeinfo() {
         extractAndApplyColors(window.song_data.cover);
     }
 }
+
+/** 更新标题/歌手文本，并仅在实际溢出时启用滚动。 */
+function updateMarquee(element: HTMLElement | null, text: string, force = false) {
+    if (!element) return;
+
+    const nextText = text || '';
+    if (!force && element.dataset.marqueeText === nextText) return;
+    element.dataset.marqueeText = nextText;
+
+    let track = element.querySelector<HTMLElement>(':scope > .marquee-track');
+    if (!track) {
+        track = document.createElement('span');
+        track.className = 'marquee-track';
+        const first = document.createElement('span');
+        const second = document.createElement('span');
+        first.className = second.className = 'marquee-content';
+        track.append(first, second);
+        element.replaceChildren(track);
+    }
+
+    const contents = track.querySelectorAll<HTMLElement>(':scope > .marquee-content');
+    const content = contents[0];
+    const duplicate = contents[1];
+    if (!content || !duplicate) return;
+
+    content.textContent = nextText;
+    duplicate.textContent = nextText;
+    element.classList.remove('is-marquee');
+
+    // 等待 DOM 完成布局后测量，避免切歌或窗口缩放时拿到旧尺寸。
+    requestAnimationFrame(() => {
+        if (!element.isConnected) return;
+        const overflow = content.scrollWidth - element.clientWidth;
+        if (overflow > 1) {
+            const gap = Math.max(40, element.clientWidth * 0.2);
+            element.style.setProperty('--marquee-distance', `${content.scrollWidth + gap}px`);
+            element.style.setProperty('--marquee-gap', `${gap}px`);
+            element.style.setProperty('--marquee-duration', `${Math.max(10, (content.scrollWidth + gap) / 25 + 8)}s`);
+            element.classList.add('is-marquee');
+        }
+    });
+}
+
+window.addEventListener('resize', () => {
+    updateMarquee(document.getElementById('name'), window.song_data?.name || '', true);
+    updateMarquee(document.getElementById('artist'), window.song_data?.artist || '', true);
+});
 // import "@applemusic-like-lyrics/core/style.css"; 
 async function loginAndSetTime() {
     window.song_data = {
@@ -284,6 +332,7 @@ function get_current_song(event: any) {
     console.log(event);
     window.song_data.name = event.title;
     window.song_data.artist = event.artist;
+    window.song_data.album = event.album || '';
     changeinfo();
     init(window.song_data.name , window.song_data.artist);
 }

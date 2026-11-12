@@ -394,3 +394,57 @@ body {
         transform: scale(1.7) translateX(-20%) translateY(-20%);
     }
 }
+
+/* 标题和歌手超出可视宽度时：两端淡出，并在回到起点后停顿再循环。 */
+#name,
+#artist {
+    overflow: hidden;
+    text-overflow: clip;
+}
+
+#name .marquee-track,
+#artist .marquee-track {
+    display: inline-flex;
+    gap: var(--marquee-gap, 40px);
+    width: max-content;
+}
+
+#name .marquee-content,
+#artist .marquee-content {
+    display: inline-block;
+    flex: 0 0 auto;
+    min-width: max-content;
+}
+
+/* 第二份文本只用于无缝滚动，未溢出时必须隐藏。 */
+#name .marquee-content + .marquee-content,
+#artist .marquee-content + .marquee-content {
+    display: none;
+}
+
+#name.is-marquee .marquee-content + .marquee-content,
+#artist.is-marquee .marquee-content + .marquee-content {
+    display: inline-block;
+}
+
+#name.is-marquee,
+#artist.is-marquee {
+    /* 起点左侧完整显示，只在右边缘淡出。 */
+    -webkit-mask-image: linear-gradient(to right, black 0, black 98%, transparent 100%);
+    mask-image: linear-gradient(to right, black 0, black 98%, transparent 100%);
+    -webkit-mask-size: calc(100% + 80px) 100%;
+    mask-size: calc(100% + 80px) 100%;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+#name.is-marquee .marquee-track,
+#artist.is-marquee .marquee-track {
+    animation: text-marquee var(--marquee-duration) linear infinite;
+}
+
+@keyframes text-marquee {
+    0%, 15% { transform: translateX(0); }
+    60%, 68% { transform: translateX(calc(-1 * var(--marquee-distance) + var(--marquee-gap))); }
+    100% { transform: translateX(calc(-1 * var(--marquee-distance))); }
+}
