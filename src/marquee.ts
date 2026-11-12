@@ -69,15 +69,23 @@ class MetadataMarquee {
         this.stop();
         if (viewport <= 0 || width <= viewport + 1) return;
 
-        const gap = Math.max(40, viewport * 0.15);
+        const pixelRatio = window.devicePixelRatio || 1;
+        const distance = Math.ceil((width + Math.max(40, viewport * 0.15)) * pixelRatio) / pixelRatio;
+        const gap = distance - width;
         this.track.style.columnGap = `${gap}px`;
         this.element.classList.add('is-overflowing');
-        const distance = width + gap;
         // A full copy plus its gap is exactly one period: the loop boundary is invisible.
         this.animation = this.track.animate([
             { transform: 'translateX(0)' },
             { transform: `translateX(-${distance}px)` },
-        ], { duration: distance / 30 * 1000, iterations: Infinity, easing: 'linear', delay: 1200, fill: 'backwards' });
+        ], {
+            duration: distance / 30 * 1000,
+            iterations: Infinity,
+            // Move one physical pixel per step instead of resampling glyphs between pixels.
+            easing: `steps(${Math.round(distance * pixelRatio)}, end)`,
+            delay: 1200,
+            fill: 'backwards',
+        });
     }
 }
 
