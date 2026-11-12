@@ -4,6 +4,8 @@
 
 歌词大小属性为 `lyricsize`，默认 `100`（当前大小），范围 `50`～`200`，单位为百分比；Wallpaper 和浏览器调试面板均可实时调节。`public/project.json` 在构建时复制到 `dist/project.json`，导入 Wallpaper Engine 时使用完整的 `dist` 文件夹。更新已有壁纸时，可将其中的 `general.properties.lyricsize` 合并到原壁纸配置，保留原有的标题和创意工坊信息。
 
+字号使用当前安装的 AMLL Core 0.1.3 官方 CSS 变量 `--amll-lyric-player-font-size`，设置在宿主 `#app` 上，字号变化后等待库的 ResizeObserver 更新尺寸，再通过公开的 `getLyricLines()` / `setLyricLines()` 重建已加载歌词的逐字几何与遮罩，并调用 `calcLayout(true, true)` 重新布局；不会重新请求后台；不调用内部 `rebuildStyle()`。100% 时移除覆盖，直接采用库默认值 `max(min(6vh, 8vw), 12px)`。对应上游源码：https://github.com/amll-dev/applemusic-like-lyrics/blob/6d9cb894c6510995d6a30ace7a1814dc333d57d1/packages/core/src/lyric-player/index.ts#L175
+
 运行 `npm install`（首次）和 `npm run dev`，打开终端显示的本地地址即可。
 开发服务器在普通浏览器中自动加载独立桩函数，不需要 Wallpaper Engine 或后台在线。
 

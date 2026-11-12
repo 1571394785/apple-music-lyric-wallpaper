@@ -39,6 +39,7 @@ window.mohu = false;
 // 创建颜色提取器实例
 const colorExtractor = new ColorExtractor();
 let lastCoverUrl = '';
+let lyricSizeFrame = 0;
 
 // 音频可视化相关变量
 let audioCanvas: HTMLCanvasElement | null = null;
@@ -161,13 +162,35 @@ window.wallpaperPropertyListener = {
             const value = Number(properties.lyricsize.value);
             if (Number.isFinite(value)) {
                 const scale = Math.max(50, Math.min(200, value)) / 100;
-                // Inherit from the document: AMLL rebuildStyle replaces its own inline style.
-                document.documentElement.style.setProperty('--amll-lyric-player-font-size',
-                    `max(min(${6 * scale}vh, ${8 * scale}vw), ${12 * scale}px)`);
-                if (player) {
-                    player.rebuildStyle();
-                    player.calcLayout(true, true);
+                // AMLL core 0.1.3 official CSS customization point:
+                // packages/core/src/lyric-player/index.ts, lyricPlayer.fontSize.
+                // Keep it on the host, since the player's inline style is managed by AMLL.
+                const host = document.getElementById('app');
+                // Clean up the document-level override used by the earlier implementation.
+                document.documentElement.style.removeProperty('--amll-lyric-player-font-size');
+                if (scale === 1) {
+                    host?.style.removeProperty('--amll-lyric-player-font-size');
+                } else {
+                    host?.style.setProperty('--amll-lyric-player-font-size',
+                        `max(min(${6 * scale}vh, ${8 * scale}vw), ${12 * scale}px)`);
                 }
+                // A font change need not resize the content box observed by AMLL.
+                // Coalesce slider events and explicitly reflow after CSS takes effect.
+                cancelAnimationFrame(lyricSizeFrame);
+                lyricSizeFrame = requestAnimationFrame(() => {
+                    // Allow AMLL's ResizeObserver to consume the new content-box first.
+                    lyricSizeFrame = requestAnimationFrame(() => {
+                        lyricSizeFrame = 0;
+                        if (!player) return;
+                        const lines = player.getLyricLines();
+                        cancelLyricAnimations();
+                        // Rebuild word geometry and highlighting masks through the public API.
+                        player.setLyricLines(lines);
+                        player.setEnableSpring(true);
+                        player.resetScroll();
+                        player.calcLayout(true, true);
+                    });
+                });
             }
         }
         if (properties.timesetoff) {
@@ -318,42 +341,7 @@ function get_current_time(event: any) {
 var player: LyricPlayer
 let lyricRequest: AbortController | undefined;
 let lyricRequestVersion = 0;
-// 创建歌词播放组件
-async function init(song_name: string, artist: string = "") {
-    // Reuse one player; this library version retains a pagehide listener on dispose.
-    lyricRequest?.abort();
-    const request = new AbortController();
-    lyricRequest = request;
-    const version = ++lyricRequestVersion;
-    if (!player) {
-        player = new LyricPlayer(); // 创建歌词播放组件
-        player.setEnableBlur(window.mohu); // 关闭模糊效果
-        player.setAlignPosition(0.2)
-        let html_player = player.getElement()
-        html_player.id = "lyric-player"
-        const appElement = document.getElementById("app");
-        if (appElement) {
-
-            appElement.appendChild(html_player);
-
-            // 创建遮罩层以阻止 hover 效果
-            const overlay = document.createElement('div');
-            overlay.id = 'lyric-player-overlay';
-            overlay.style.cssText = `
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 9999;
-                pointer-events: auto;
-                background: transparent;
-            `;
-            html_player.style.position = 'relative';
-            html_player.appendChild(overlay);
-        }
-
-    }
+function cancelLyricAnimations() {
     // AMLL 0.1.x detaches offscreen lines before disposal, so the player subtree
     // alone misses their animations. Include every line renderer, even hidden ones.
     const lineRenderers = (player as unknown as {
@@ -371,6 +359,47 @@ async function init(song_name: string, artist: string = "") {
     for (const root of roots) {
         for (const animation of root.getAnimations({ subtree: true })) animation.cancel();
     }
+}
+
+// 创建歌词播放组件
+async function init(song_name: string, artist: string = "") {
+    // Reuse one player; this library version retains a pagehide listener on dispose.
+    lyricRequest?.abort();
+    const request = new AbortController();
+    lyricRequest = request;
+    const version = ++lyricRequestVersion;
+    if (!player) {
+        player = new LyricPlayer(); // 创建歌词播放组件
+        player.setEnableBlur(window.mohu); // 关闭模糊效果
+        player.setAlignPosition(0.2)
+        let html_player = player.getElement()
+        html_player.id = "lyric-player"
+        const appElement = document.getElementById("app");
+        if (appElement) {
+
+            const host = document.createElement('div');
+            host.id = 'lyric-host';
+            host.appendChild(html_player);
+            appElement.appendChild(host);
+
+            // 创建遮罩层以阻止 hover 效果
+            const overlay = document.createElement('div');
+            overlay.id = 'lyric-player-overlay';
+            overlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 9999;
+                pointer-events: auto;
+                background: transparent;
+            `;
+            html_player.appendChild(overlay);
+        }
+
+    }
+    cancelLyricAnimations();
     player.setLyricLines([]);
     try {
         const ly = await download_lyric(song_name, artist, request.signal);
