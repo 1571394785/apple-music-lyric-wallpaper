@@ -1,14 +1,48 @@
+export const LYRIC_API = 'http://39.104.86.15/spotify_like_applemusic/background/get_lyric.py';
+
+export interface SongMatch {
+    id: string;
+    name: string;
+    artist: string;
+    album: string;
+    duration: number;
+    cover: string;
+}
+
+async function requestApi(body: BodyInit, signal?: AbortSignal) {
+    const response = await fetch(LYRIC_API, { method: 'POST', body, signal });
+    if (!response.ok) throw new Error('暂时无法连接歌词服务，请重试');
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error('歌词服务暂时未返回有效结果，请稍后再试');
+    }
+    if (!data || (data.code !== undefined && Number(data.code) !== 200)) {
+        throw new Error(data?.msg || '歌词服务暂时不可用，请重试');
+    }
+    return data;
+}
+
+export async function searchSongs(key: string, artist: string, page: number, limit: number, signal?: AbortSignal): Promise<SongMatch[]> {
+    const data = await requestApi(new URLSearchParams({ v: '2', action: 'search', key, artist, page: String(page), limit: String(limit) }), signal);
+    if (!Array.isArray(data.songs)) throw new Error('搜索结果格式异常，请重试');
+    return data.songs.filter((song: SongMatch) => typeof song.id === 'string' && typeof song.name === 'string');
+}
+
+export async function downloadLyricById(id: string, signal?: AbortSignal) {
+    const data = await requestApi(new URLSearchParams({ v: '2', action: 'lyric', id }), signal);
+    if (typeof data.lyric !== 'string' || !data.lyric) throw new Error('这首歌暂时没有歌词，请选择其他版本');
+    return test(data.lyric);
+}
+
 async function download_lyric(key: string,artist:string="", signal?: AbortSignal) {
-    console.log(key)
     const formData = new FormData();
     formData.append("key", key);
     formData.append("artist", artist);
 
-    const json = await fetch("http://39.104.86.15/spotify_like_applemusic/background/get_lyric.py", {
-        signal,
-        method: "POST",
-        body: formData
-    }).then(res => res.json());
+    const json = await requestApi(formData, signal);
+    if (typeof json.lyric !== 'string' || !json.lyric) throw new Error('未找到歌词');
 
     var a = test(json["lyric"]);
     return a

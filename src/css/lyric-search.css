@@ -1,0 +1,117 @@
+#cover-card {
+    width: 100%;
+    height: 100%;
+    perspective: 1200px;
+    position: relative;
+    z-index: 1;
+}
+
+.cover-card__rotor {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 550ms cubic-bezier(.22, .7, .2, 1);
+}
+
+#cover-card.is-flipped .cover-card__rotor { transform: rotateY(180deg); }
+#container.is-searching { z-index: 20; }
+
+#cover-card #cover,
+.cover-card__back {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border-radius: calc(1.4 * var(--info-unit));
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+#cover-card #cover {
+    display: block;
+    padding: 0;
+    border: 0;
+    color: white;
+    cursor: pointer;
+    z-index: auto;
+    transform: rotateY(0deg);
+    text-align: center;
+}
+
+.cover-card__hint {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    padding: 7px 12px;
+    border-radius: 30px;
+    background: #111820a6;
+    font: 500 12px/1.2 system-ui;
+    opacity: .75;
+    transition: opacity 180ms;
+}
+#cover:hover .cover-card__hint { opacity: 1; }
+
+.cover-card__back {
+    transform: rotateY(180deg);
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    gap: clamp(6px, 1.1vmin, 12px);
+    padding: clamp(12px, 2vmin, 24px);
+    color: #f4f5f8;
+    background: linear-gradient(145deg, #29323f, #121821 70%);
+    border: 1px solid #ffffff24;
+    box-shadow: 0 10px 35px #0005;
+    font: 400 clamp(14px, 1.6vmin, 18px)/1.3 system-ui;
+    overflow: hidden;
+}
+.cover-card__back button,
+.cover-card__back input { font: inherit; box-sizing: border-box; min-width: 0; }
+.cover-card__back button { cursor: pointer; border: 0; }
+.cover-card__back button:disabled { opacity: .3; cursor: default; }
+.cover-card__back button:focus-visible,
+.cover-card__back input:focus-visible,
+#cover:focus-visible { outline: 2px solid #e2d4b7; outline-offset: -2px; }
+
+.lyric-search__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lyric-search__eyebrow { font-size: .65em; letter-spacing: .18em; color: #c8b48a; }
+.lyric-search__header h2 { margin: 3px 0 0; font-size: 1.05em; font-weight: 600; }
+.lyric-search__header button { border-radius: 50%; background: #ffffff0d; color: #fff; width: 30px; height: 30px; font-size: 20px; }
+.lyric-search__modes { display: flex; border-radius: 8px; background: #ffffff08; padding: 3px; }
+.lyric-search__modes button { flex: 1; border-radius: 5px; padding: 5px 4px; color: #aab2c0; background: transparent; font-size: .85em; }
+.lyric-search__modes [aria-pressed="true"] { background: #ffffff16; color: #fff; }
+.lyric-search__form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .85fr) 32px; gap: 6px; }
+.lyric-search__form.is-title-only { grid-template-columns: minmax(0, 1fr) 32px; }
+.lyric-search__form input { width: 100%; border: 1px solid #ffffff20; background: #0c111966; border-radius: 7px; color: white; padding: 7px 8px; user-select: text; }
+.lyric-search__form input::placeholder { color: #9da6b5; }
+.lyric-search__form input[hidden] { display: none; }
+.lyric-search__form button { border-radius: 7px; color: #171b23; background: #d8c8a8; font-size: 24px; }
+.lyric-search__matches { display: grid; grid-template-columns: minmax(0, 1fr) 28px; min-height: 0; gap: 8px; }
+.lyric-search__results { display: grid; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 5px; min-height: 0; overflow: hidden; }
+.lyric-search__song { display: flex; flex-direction: column; justify-content: center; gap: 2px; align-items: stretch; min-height: 0; overflow: hidden; padding: 6px 9px; border-radius: 8px; background: #ffffff06; color: #d5d9e2; text-align: left; transition: background 150ms; }
+.lyric-search__song:hover { background: #ffffff13; }
+.lyric-search__song strong,
+.lyric-search__song span,
+.lyric-search__song small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.25; }
+.lyric-search__song strong { color: #fff; font-size: 1em; font-weight: 600; }
+.lyric-search__song span { font-size: .85em; }
+.lyric-search__song small { font-size: .78em; color: #8993a4; }
+.lyric-search__pages { display: flex; flex-direction: column; justify-content: space-between; align-items: stretch; min-height: 0; }
+.lyric-search__pages button { flex: 0 0 30px; background: #ffffff0a; color: #fff; border-radius: 7px; font-size: 20px; }
+.lyric-search__pages span { text-align: center; font-size: .8em; color: #aab2c0; }
+.lyric-search__status { font-size: .75em; color: #aab2c0; min-height: 1.3em; margin: 0; }
+.lyric-search__status.is-error { color: #ffb7ad; }
+
+@media (aspect-ratio <= 1/1) {
+    #cover-card { width: 20vmin; height: 20vmin; }
+    #cover-card .cover-card__hint { font-size: 9px; padding: 4px 6px; bottom: 5px; }
+    #cover-card.is-flipped { width: 90vw; height: min(75vh, 560px); }
+    #cover-card .cover-card__back { font-size: clamp(13px, 2.8vw, 16px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cover-card__rotor { transition-duration: 1ms; }
+}

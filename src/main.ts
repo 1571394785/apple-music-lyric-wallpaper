@@ -1,7 +1,8 @@
 import { BackgroundFlow } from "./background-flow";
 import { updateMarquee } from "./marquee";
 import { LyricPlayer } from "@applemusic-like-lyrics/core";
-import { download_lyric } from "./lyric";
+import { download_lyric, downloadLyricById } from "./lyric";
+import { createLyricSearch } from './lyric-search';
 import { ShaderAnimation, ColorExtractor } from "./shader";
 
 declare global {
@@ -45,6 +46,9 @@ let lyricSizeFrame = 0;
 let lyricPositionPercent = 100 / 3;
 const backgroundFlow = new BackgroundFlow();
 let legacyShaderSpeed = 0.5;
+let manualLyricId: string | undefined;
+let lastMediaKey: string | undefined;
+let lyricSearch: ReturnType<typeof createLyricSearch> | undefined;
 
 // 音频可视化相关变量
 let audioCanvas: HTMLCanvasElement | null = null;
@@ -372,11 +376,18 @@ function formatTime(time: string) {
 }
 function get_current_song(event: any) {
     console.log(event);
-    window.song_data.name = event.title;
-    window.song_data.artist = event.artist;
+    const mediaKey = JSON.stringify([event.title || '', event.artist || '', event.album || '']);
+    const changed = mediaKey !== lastMediaKey;
+    lastMediaKey = mediaKey;
+    window.song_data.name = event.title || '';
+    window.song_data.artist = event.artist || '';
     window.song_data.album = event.album || '';
     changeinfo();
-    init(window.song_data.name , window.song_data.artist);
+    if (changed) {
+        manualLyricId = undefined;
+        lyricSearch?.mediaChanged();
+        void init(window.song_data.name, window.song_data.artist);
+    }
 }
 function get_thumbnail(event: any) {
     console.log(event);
@@ -445,7 +456,7 @@ function cancelLyricAnimations() {
 }
 
 // 创建歌词播放组件
-async function init(song_name: string, artist: string = "") {
+async function init(song_name: string, artist: string = "", songId = manualLyricId): Promise<boolean> {
     // Reuse one player; this library version retains a pagehide listener on dispose.
     lyricRequest?.abort();
     const request = new AbortController();
@@ -484,21 +495,24 @@ async function init(song_name: string, artist: string = "") {
         }
 
     }
-    cancelLyricAnimations();
-    player.setLyricLines([]);
     backgroundFlow.reset();
     try {
-        const ly = await download_lyric(song_name, artist, request.signal);
-        if (request.signal.aborted || version !== lyricRequestVersion) return;
+        const ly = songId
+            ? await downloadLyricById(songId, request.signal)
+            : await download_lyric(song_name, artist, request.signal);
+        if (request.signal.aborted || version !== lyricRequestVersion) return false;
+        cancelLyricAnimations();
         player.setLyricLines(ly)
         player.setEnableSpring(true); // 启用物理弹簧效果
         player.resetScroll();
-        player.calcLayout(true, true);
+        alignCurrentLyric();
+        return true;
 
     } catch (error) {
         if (!request.signal.aborted && version === lyricRequestVersion) {
             console.error('Lyric loading failed', error);
         }
+        return false;
     }
 }
 function init_requestAnimationFrame() {
@@ -660,3 +674,15 @@ if (div_end) {
     }
     );
 }
+
+lyricSearch = createLyricSearch({
+    getSong: () => window.song_data,
+    select: async song => {
+        const mediaKey = lastMediaKey;
+        const success = await init(window.song_data.name, window.song_data.artist, song.id);
+        if (!success || mediaKey !== lastMediaKey) return false;
+        // Remember this match for the current media only; repeated host notifications retain it.
+        manualLyricId = song.id;
+        return true;
+    },
+});

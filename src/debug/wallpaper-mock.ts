@@ -1,5 +1,17 @@
 import lyrics from './qingtian.json';
 import coverUrl from './qingtian-cover.png';
+import { LYRIC_API } from '../lyric';
+
+const mockVersions = [
+    ['qq:0039MnYb0qxYhV', '叶惠美'],
+    ['qq:004Fs2FP1EvZYc', '地表最强世界巡回演唱会'],
+    ['qq:001398Rf3gykz8', '2004 无与伦比演唱会'],
+    ['qq:mockQingtian04', '夏日现场特别版'],
+    ['qq:mockQingtian05', '钢琴与人声'],
+    ['qq:mockQingtian06', '青春回忆精选'],
+    ['qq:mockQingtian07', '不插电音乐会'],
+    ['qq:mockQingtian08', '十周年纪念现场'],
+];
 
 // All editable fake host data lives here. Lyrics are a snapshot of the real API.
 export const mockSong = {
@@ -68,12 +80,35 @@ export function installWallpaperMock() {
 
     // Intercept this one API only, retaining the application's real lyric parser.
     const originalFetch = window.fetch.bind(window);
-    window.fetch = (input, init) => {
+    window.fetch = async (input, init) => {
         const url = input instanceof Request ? input.url : String(input);
-        if (url === 'http://39.104.86.15/spotify_like_applemusic/background/get_lyric.py') {
-            return Promise.resolve(new Response(JSON.stringify(lyrics), {
+        if (url.split('?')[0] === LYRIC_API) {
+            if (init?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+            const params = new URL(url).searchParams;
+            const body = init?.body;
+            if (body instanceof FormData || body instanceof URLSearchParams) {
+                body.forEach((value, key) => { if (typeof value === 'string') params.set(key, value); });
+            } else if (typeof body === 'string') {
+                new URLSearchParams(body).forEach((value, key) => params.set(key, value));
+            }
+            let data: unknown = lyrics;
+            if (params.get('v') === '2' && params.get('action') === 'search') {
+                const page = Number(params.get('page') || 1);
+                const limit = Number(params.get('limit') || 3);
+                const songs = mockVersions.slice((page - 1) * limit, page * limit).map(([id, album]) => ({
+                    id, album, name: params.get('key') || '晴天',
+                    artist: params.get('artist') || '周杰伦', duration: 269, cover: coverUrl,
+                }));
+                data = { code: 200, version: 2, action: 'search', page, limit, count: songs.length, songs };
+            } else if (params.get('v') === '2') {
+                const id = params.get('id');
+                data = mockVersions.some(([key]) => key === id)
+                    ? { ...lyrics, code: 200, version: 2, action: 'lyric', id }
+                    : { code: 404, msg: '未找到该歌曲的歌词' };
+            }
+            return new Response(JSON.stringify(data), {
                 headers: { 'Content-Type': 'application/json; charset=utf-8' },
-            }));
+            });
         }
         return originalFetch(input, init);
     };
