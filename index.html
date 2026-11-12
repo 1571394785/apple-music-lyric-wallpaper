@@ -31,23 +31,20 @@
 
       <div id="cover-card">
         <div class="cover-card__rotor">
-          <button id="cover" type="button" aria-label="翻转封面，搜索匹配歌词" aria-expanded="false" aria-controls="lyric-search">
-            <span class="cover-card__hint">⌕ 匹配歌词</span>
-          </button>
+          <button id="cover" type="button" aria-label="翻转封面，搜索歌词" aria-expanded="false" aria-controls="lyric-search"></button>
           <section id="lyric-search" class="cover-card__back" aria-label="搜索匹配歌词" aria-hidden="true" inert>
             <header class="lyric-search__header">
-              <div><span class="lyric-search__eyebrow">LYRIC MATCH</span><h2>找到正在唱的版本</h2></div>
+              <div><span class="lyric-search__eyebrow">选择正在播放的版本</span><h2>歌词</h2></div>
               <button type="button" data-search-close aria-label="返回封面" title="返回封面">↩</button>
             </header>
             <div class="lyric-search__modes" role="group" aria-label="搜索方式">
               <button type="button" data-search-mode="song" aria-pressed="false">歌名</button>
               <button type="button" data-search-mode="artist" aria-pressed="true">歌名＋歌手</button>
             </div>
-            <form class="lyric-search__form" data-search-form>
-              <input data-search-title type="text" aria-label="搜索歌名" placeholder="歌名" maxlength="200" required autocomplete="off">
-              <input data-search-artist type="text" aria-label="搜索歌手" placeholder="歌手" maxlength="200" autocomplete="off">
-              <button type="submit" aria-label="搜索歌曲" title="搜索">⌕</button>
-            </form>
+            <div class="lyric-search__query">
+              <div class="lyric-search__query-text"><strong data-search-title></strong><span data-search-artist></span></div>
+              <button type="button" data-search-submit aria-label="重新搜索" title="重新搜索">⌕</button>
+            </div>
             <div class="lyric-search__matches">
               <div class="lyric-search__results" data-search-results aria-label="匹配歌曲"></div>
               <nav class="lyric-search__pages" aria-label="搜索结果翻页">
