@@ -1,14 +1,15 @@
-async function download_lyric(key: string,artist:string="") {
+async function download_lyric(key: string,artist:string="", signal?: AbortSignal) {
     console.log(key)
     const formData = new FormData();
     formData.append("key", key);
     formData.append("artist", artist);
 
     const json = await fetch("http://39.104.86.15/spotify_like_applemusic/background/get_lyric.py", {
+        signal,
         method: "POST",
         body: formData
     }).then(res => res.json());
-    console.log(json);
+
     var a = test(json["lyric"]);
     return a
 }
@@ -78,7 +79,7 @@ function test(ly: string) {
         }
 
     }
-    console.log(sum_arr)
+
     return sum_arr
 
 }

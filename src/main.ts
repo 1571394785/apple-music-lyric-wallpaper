@@ -51,7 +51,7 @@ function wallpaperAudioListener(audioArray: number[]) {
         console.warn("Canvas not initialized:", { audioCanvas, audioCanvasCtx });
         return;
     }
-    
+
     // 动态归一化：找到最大值并放大（已禁用）
     // let maxValue = 0;
     // for (let i = 0; i < audioArray.length; i++) {
@@ -59,16 +59,16 @@ function wallpaperAudioListener(audioArray: number[]) {
     //         maxValue = audioArray[i];
     //     }
     // }
-    
+
     // // 计算目标放大系数，增加最大限制到50，降低最小阈值
     // const targetAmplification = maxValue > 0.001 ? Math.min(1.0 / maxValue, 50) : 5;
-    
+
     // // 平滑过渡：使用指数移动平均，让放大系数缓慢变化
     // const smoothingFactor = 0.15; // 平滑因子，稍微加快响应速度
     // smoothedAmplification = smoothedAmplification * (1 - smoothingFactor) + targetAmplification * smoothingFactor;
-    
+
     const amplification = 1; // 禁用放大，使用原始音频数据
-    
+
     // Clear the canvas and set it to black
     audioCanvasCtx.fillStyle = 'rgb(0,0,0)';
     audioCanvasCtx.fillRect(0, 0, audioCanvas.width, audioCanvas.height);
@@ -79,7 +79,7 @@ function wallpaperAudioListener(audioArray: number[]) {
 
     // 计算低频范围（在绘制前先计算）
     const bassRange = Math.floor(audioArray.length * (window.diyin || 0.2)); // 使用diyin参数确定低频范围
-    
+
     // Begin with the left channel in red
     // Iterate over the first 64 array elements (0 - 63) for the left channel audio data
     for (let i = 0; i < halfCount; ++i) {
@@ -89,7 +89,7 @@ function wallpaperAudioListener(audioArray: number[]) {
         } else {
             audioCanvasCtx.fillStyle = 'rgb(255,0,0)'; // 红色表示其他频率
         }
-        
+
         // 应用放大系数，动态调整高度
         const normalizedValue = Math.min(audioArray[i] * amplification, 1);
         const height = audioCanvas.height * normalizedValue;
@@ -106,13 +106,13 @@ function wallpaperAudioListener(audioArray: number[]) {
         } else {
             audioCanvasCtx.fillStyle = 'rgb(0,0,255)'; // 蓝色表示其他频率
         }
-        
+
         // 应用放大系数，动态调整高度
         const normalizedValue = Math.min(audioArray[191 - i] * amplification, 1);
         const height = audioCanvas.height * normalizedValue;
         audioCanvasCtx.fillRect(barWidth * i, audioCanvas.height - height, barWidth, height);
     }
-    
+
     // 绘制低频范围的分界线
     const bassRangeX = barWidth * bassRange;
     audioCanvasCtx.strokeStyle = 'rgb(255,255,0)';
@@ -121,20 +121,20 @@ function wallpaperAudioListener(audioArray: number[]) {
     audioCanvasCtx.moveTo(bassRangeX, 0);
     audioCanvasCtx.lineTo(bassRangeX, audioCanvas.height);
     audioCanvasCtx.stroke();
-    
+
     // 计算低频占比
     let bassSum = 0;
     let totalSum = 0;
-    
+
     for (let i = 0; i < bassRange; i++) {
         bassSum += audioArray[i];
     }
     for (let i = 0; i < audioArray.length; i++) {
         totalSum += audioArray[i];
     }
-    
+
     const bassRatio = totalSum > 0 ? (bassSum / totalSum * 100) : 0;
-    
+
     // 使用低频占比和敏感度动态调整着色器速度
     const mingandu = window.mingandu || 0.5;
     // 将 bassRatio (0-100) 转换为速度系数，例如 0.5-2.0 的范围
@@ -142,7 +142,7 @@ function wallpaperAudioListener(audioArray: number[]) {
     if (shaderAnimation) {
         shaderAnimation.setSpeed(shaderSpeed);
     }
-    
+
     // 在canvas右上角绘制低频占比文字
     audioCanvasCtx.fillStyle = 'rgb(255,255,255)';
     audioCanvasCtx.font = 'bold 24px Arial';
@@ -174,7 +174,7 @@ window.wallpaperPropertyListener = {
             console.log("开发者工具打开");
             window.devtool = properties.devtool.value;
             const devtool = document.getElementById("devtool");
-            
+
             if(window.devtool){
                 if(devtool){
                     devtool.style.display = "block";
@@ -250,7 +250,7 @@ function changeinfo() {
     }
 }
 
-// import "@applemusic-like-lyrics/core/style.css"; 
+// import "@applemusic-like-lyrics/core/style.css";
 async function loginAndSetTime() {
     window.song_data = {
         progress: 0,
@@ -303,45 +303,75 @@ function get_current_time(event: any) {
     changeinfo();
 }
 var player: LyricPlayer
+let lyricRequest: AbortController | undefined;
+let lyricRequestVersion = 0;
 // 创建歌词播放组件
 async function init(song_name: string, artist: string = "") {
-    if (player) {
-        player.dispose();
+    // Reuse one player; this library version retains a pagehide listener on dispose.
+    lyricRequest?.abort();
+    const request = new AbortController();
+    lyricRequest = request;
+    const version = ++lyricRequestVersion;
+    if (!player) {
+        player = new LyricPlayer(); // 创建歌词播放组件
+        player.setEnableBlur(window.mohu); // 关闭模糊效果
+        player.setAlignPosition(0.2)
+        let html_player = player.getElement()
+        html_player.id = "lyric-player"
+        const appElement = document.getElementById("app");
+        if (appElement) {
+
+            appElement.appendChild(html_player);
+
+            // 创建遮罩层以阻止 hover 效果
+            const overlay = document.createElement('div');
+            overlay.id = 'lyric-player-overlay';
+            overlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 9999;
+                pointer-events: auto;
+                background: transparent;
+            `;
+            html_player.style.position = 'relative';
+            html_player.appendChild(overlay);
+        }
+
     }
-    player = new LyricPlayer(); // 创建歌词播放组件
-    player.setEnableBlur(window.mohu); // 关闭模糊效果
-    player.setAlignPosition(0.2)
-    let html_player = player.getElement()
-    html_player.id = "lyric-player"
-    const appElement = document.getElementById("app");
-    if (appElement) {
-
-        appElement.appendChild(html_player);
-        
-        // 创建遮罩层以阻止 hover 效果
-        const overlay = document.createElement('div');
-        overlay.id = 'lyric-player-overlay';
-        overlay.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            pointer-events: auto;
-            background: transparent;
-        `;
-        html_player.style.position = 'relative';
-        html_player.appendChild(overlay);
+    // AMLL 0.1.x detaches offscreen lines before disposal, so the player subtree
+    // alone misses their animations. Include every line renderer, even hidden ones.
+    const lineRenderers = (player as unknown as {
+        lyricLinesEl?: Array<{
+            getElement(): HTMLElement;
+            splittedWords?: Array<{ elementAnimations: Animation[]; maskAnimations: Animation[] }>;
+        }>;
+    }).lyricLinesEl || [];
+    for (const line of lineRenderers) {
+        for (const word of line.splittedWords || []) {
+            for (const animation of [...word.elementAnimations, ...word.maskAnimations]) animation.cancel();
+        }
     }
+    const roots = [player.getElement(), ...lineRenderers.map(line => line.getElement())];
+    for (const root of roots) {
+        for (const animation of root.getAnimations({ subtree: true })) animation.cancel();
+    }
+    player.setLyricLines([]);
+    try {
+        const ly = await download_lyric(song_name, artist, request.signal);
+        if (request.signal.aborted || version !== lyricRequestVersion) return;
+        player.setLyricLines(ly)
+        player.setEnableSpring(true); // 启用物理弹簧效果
+        player.resetScroll();
+        player.calcLayout(true, true);
 
-    var ly = await download_lyric(song_name, artist);
-    player.setLyricLines(ly)
-    player.setEnableSpring(true); // 启用物理弹簧效果
-    player.resetScroll();
-    player.calcLayout(true, true);
-
-
+    } catch (error) {
+        if (!request.signal.aborted && version === lyricRequestVersion) {
+            console.error('Lyric loading failed', error);
+        }
+    }
 }
 function init_requestAnimationFrame() {
     // 设定当前播放时间（需要逐帧调用）
