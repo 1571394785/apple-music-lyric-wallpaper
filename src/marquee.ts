@@ -8,6 +8,7 @@ class MetadataMarquee {
     private animation?: Animation;
     private text = '';
     private frame = 0;
+    private resizeTimer?: number;
     private geometry = '';
     private readonly observer: ResizeObserver;
 
@@ -18,7 +19,7 @@ class MetadataMarquee {
         this.duplicate.setAttribute('aria-hidden', 'true');
         this.track.append(this.content, this.duplicate);
         element.replaceChildren(this.track);
-        this.observer = new ResizeObserver(() => this.schedule());
+        this.observer = new ResizeObserver(() => this.scheduleResize());
         this.observer.observe(element);
         this.observer.observe(this.content);
         // Font swaps can change glyph widths without a window resize.
@@ -42,6 +43,15 @@ class MetadataMarquee {
             this.frame = 0;
             this.measure();
         });
+    }
+
+    private scheduleResize() {
+        // During a resize gesture, measure only after the layout settles.
+        window.clearTimeout(this.resizeTimer);
+        this.resizeTimer = window.setTimeout(() => {
+            this.resizeTimer = undefined;
+            this.schedule();
+        }, 150);
     }
 
     private stop() {
