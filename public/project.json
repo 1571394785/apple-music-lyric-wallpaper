@@ -104,7 +104,8 @@
         "step": 0.05,
         "fraction": true,
         "precision": 2,
-        "order": 10
+        "order": 10,
+        "condition": "backgroundflowbeta.value"
       },
       "flowstrength": {
         "text": "Beta 节拍加速强度",
@@ -115,7 +116,8 @@
         "step": 0.1,
         "fraction": true,
         "precision": 2,
-        "order": 11
+        "order": 11,
+        "condition": "backgroundflowbeta.value"
       },
       "flowsmoothing": {
         "text": "Beta 回落时间（毫秒）",
@@ -126,7 +128,8 @@
         "step": 50,
         "fraction": false,
         "precision": 0,
-        "order": 12
+        "order": 12,
+        "condition": "backgroundflowbeta.value"
       },
       "flowsensitivity": {
         "text": "Beta 节拍灵敏度",
@@ -137,7 +140,8 @@
         "step": 0.05,
         "fraction": true,
         "precision": 2,
-        "order": 13
+        "order": 13,
+        "condition": "backgroundflowbeta.value"
       },
       "flowbpm": {
         "text": "Beta 手动 BPM（0 为自动）",
@@ -148,7 +152,8 @@
         "step": 1,
         "fraction": false,
         "precision": 0,
-        "order": 14
+        "order": 14,
+        "condition": "backgroundflowbeta.value"
       }
     }
   }
