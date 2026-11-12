@@ -3,15 +3,16 @@ import coverUrl from './qingtian-cover.png';
 
 // All editable fake host data lives here. Lyrics are a snapshot of the real API.
 export const mockSong = {
-    title: '晴天 · 那些年一起听过的夏日旋律与青春回忆 · 超长歌曲名称滚动效果测试完整版',
-    artist: '周杰伦 / 超长歌手名称滚动测试 / 夏日音乐特别企划联合演出 / 青春回忆交响乐团与特别嘉宾',
-    album: '叶惠美 · 夏日珍藏纪念专辑 · 超长专辑名称滚动测试 · 完整收录青春记忆与那些年听过的旋律',
+    title: '晴天 · 夏日青春回忆特别版',
+    artist: '周杰伦 / 青春回忆特别企划',
+    album: '叶惠美 · 夏日珍藏纪念专辑',
     duration: 269, initialPosition: 29.264,
     thumbnail: coverUrl,
 };
 
 // These are every user property currently consumed by main.ts.
 const settingDefinitions = {
+    lyricsize: { label: '歌词大小（%）', type: 'range', value: 100, min: 50, max: 200, step: 5 },
     mohu: { label: '歌词模糊', type: 'checkbox', value: false },
     devtool: { label: '显示频谱调试', type: 'checkbox', value: false },
     timesetoff: { label: '歌词偏移（毫秒）', type: 'number', value: 0, min: -60000, max: 60000, step: 100 },
@@ -100,6 +101,12 @@ export function installWallpaperMock() {
         panel.innerHTML = `<summary style="cursor:pointer">浏览器调试 · 晴天</summary>
             <div style="display:grid;gap:10px;padding-top:12px">
             <span>本地歌词快照 · 模拟频谱（无声音）</span>
+            <fieldset style="display:grid;gap:8px;border:1px solid #ffffff40;border-radius:8px"><legend>实时修改显示文字</legend>
+            <label>歌名<input data-song="title" type="text" style="display:block;width:100%;box-sizing:border-box"></label>
+            <label>歌手<input data-song="artist" type="text" style="display:block;width:100%;box-sizing:border-box"></label>
+            <label>专辑<input data-song="album" type="text" style="display:block;width:100%;box-sizing:border-box"></label>
+            <small>输入后即时更新，歌词仍使用《晴天》快照。</small>
+            </fieldset>
             <button data-play>暂停</button>
             <input aria-label="播放进度" data-seek type="range" min="0" max="${mockSong.duration}" step="0.1" value="${position}">
             <output></output><button data-reload>重新发送歌曲信息</button>
@@ -113,6 +120,14 @@ export function installWallpaperMock() {
             <button data-reset>恢复默认设置</button></fieldset>
             </div>`;
         document.body.appendChild(panel);
+        panel.querySelectorAll<HTMLInputElement>('[data-song]').forEach(input => {
+            const key = input.dataset.song as 'title' | 'artist' | 'album';
+            input.value = mockSong[key];
+            input.oninput = () => {
+                mockSong[key] = input.value;
+                emitSong();
+            };
+        });
         panel.querySelector<HTMLButtonElement>('[data-play]')!.onclick = event => {
             playing = !playing;
             previous = performance.now();

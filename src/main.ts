@@ -157,6 +157,19 @@ function wallpaperAudioListener(audioArray: number[]) {
 
 window.wallpaperPropertyListener = {
     applyUserProperties: function (properties) {
+        if (properties.lyricsize) {
+            const value = Number(properties.lyricsize.value);
+            if (Number.isFinite(value)) {
+                const scale = Math.max(50, Math.min(200, value)) / 100;
+                // Inherit from the document: AMLL rebuildStyle replaces its own inline style.
+                document.documentElement.style.setProperty('--amll-lyric-player-font-size',
+                    `max(min(${6 * scale}vh, ${8 * scale}vw), ${12 * scale}px)`);
+                if (player) {
+                    player.rebuildStyle();
+                    player.calcLayout(true, true);
+                }
+            }
+        }
         if (properties.timesetoff) {
             console.log("timeoffset改变", properties.timesetoff.value);
             window.trans_global = properties.timesetoff.value;

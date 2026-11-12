@@ -1,0 +1,17 @@
+{
+  "title": "Apple Music 歌词壁纸",
+  "type": "web",
+  "file": "index.html",
+  "general": {
+    "supportsaudioprocessing": true,
+    "supportsmediaintegration": true,
+    "properties": {
+      "lyricsize": { "text": "歌词大小（%）", "type": "slider", "value": 100, "min": 50, "max": 200, "fraction": false, "order": 0 },
+      "mohu": { "text": "歌词模糊", "type": "bool", "value": false, "order": 1 },
+      "timesetoff": { "text": "歌词偏移（毫秒）", "type": "slider", "value": 0, "min": -60000, "max": 60000, "fraction": false, "order": 2 },
+      "diyin": { "text": "低频范围", "type": "slider", "value": 0.2, "min": 0.01, "max": 0.5, "fraction": true, "precision": 2, "order": 3 },
+      "mingandu": { "text": "音频敏感度", "type": "slider", "value": 0.5, "min": 0, "max": 5, "fraction": true, "precision": 1, "order": 4 },
+      "devtool": { "text": "显示频谱调试", "type": "bool", "value": false, "order": 5 }
+    }
+  }
+}
