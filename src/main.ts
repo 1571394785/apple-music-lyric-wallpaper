@@ -40,6 +40,7 @@ window.mohu = false;
 // 创建颜色提取器实例
 const colorExtractor = new ColorExtractor();
 let lastCoverUrl = '';
+let displayedCover: string | undefined;
 let lyricSizeFrame = 0;
 let lyricPositionPercent = 100 / 3;
 const backgroundFlow = new BackgroundFlow();
@@ -52,7 +53,7 @@ let audioCanvasCtx: CanvasRenderingContext2D | null = null;
 
 // 音频监听器函数
 function wallpaperAudioListener(audioArray: number[]) {
-    backgroundFlow.audio(audioArray, performance.now());
+    if (backgroundFlow.enabled) backgroundFlow.audio(audioArray, performance.now());
     const bassCount = Math.min(audioArray.length, Math.floor(audioArray.length * (window.diyin ?? 0.2)));
     let bass = 0, total = 0;
     for (let i = 0; i < audioArray.length; i++) {
@@ -169,7 +170,11 @@ function wallpaperAudioListener(audioArray: number[]) {
 
 window.wallpaperPropertyListener = {
     applyUserProperties: function (properties) {
-        if (properties.backgroundflowbeta) backgroundFlow.enabled = Boolean(properties.backgroundflowbeta.value);
+        if (properties.backgroundflowbeta) {
+            const enabled = Boolean(properties.backgroundflowbeta.value);
+            if (enabled !== backgroundFlow.enabled) backgroundFlow.reset();
+            backgroundFlow.enabled = enabled;
+        }
         for (const [key, field, min, max] of [
             ['flowbasespeed', 'baseSpeed', 0, 2],
             ['flowstrength', 'strength', 0, 5],
@@ -290,18 +295,24 @@ function changeinfo() {
     updateMarquee(name, window.song_data.name);
     updateMarquee(artist, window.song_data.artist);
     updateMarquee(album, window.song_data.album);
-    if (cover) cover.style.backgroundImage = "url(" + window.song_data.cover + ")";
+    if (displayedCover !== window.song_data.cover) {
+        displayedCover = window.song_data.cover;
+        if (cover) cover.style.backgroundImage = `url("${displayedCover}")`;
+        if (bcg) bcg.style.backgroundImage = `url("${displayedCover}")`;
+    }
     if (progress_bar) progress_bar.style.width = window.song_data.progress_percent + "%";
     if (start_div) {
         const st = Math.floor(window.song_data.progress / 1000 / 60) + ":" + Math.floor(window.song_data.progress / 1000 % 60);
-        start_div.innerText = formatTime(st);
+        const text = formatTime(st);
+        if (start_div.textContent !== text) start_div.textContent = text;
     }
     if (end) {
         const endInMs = parseInt(window.song_data.end, 10) - window.song_data.progress;
         const ed = Math.floor(endInMs / 1000 / 60) + ":" + Math.floor(endInMs / 1000 % 60);
-        end.innerText = formatTime(ed);
+        const text = formatTime(ed);
+        if (end.textContent !== text) end.textContent = text;
     }
-    if (bcg) bcg.style.backgroundImage = "url(" + window.song_data.cover + ")";
+
 
     // 当封面改变时，提取颜色并应用到着色器
     if (window.song_data.cover && window.song_data.cover !== lastCoverUrl && shaderAnimation) {
@@ -322,15 +333,7 @@ async function loginAndSetTime() {
         isPlaying: 1,
         end: ""
     };
-    let last_time = Date.now();
-    setInterval(function () {
-        if (window.song_data.isPlaying==1) {
-            window.song_data.progress += Date.now() - last_time
-            last_time = Date.now()
-            changeinfo()  //后续恢复 临时测试
-        }
-        // console.log(window.song_data.progress)
-    }, 10);
+
 }
 function formatTime(time: string) {
     // 将时间字符串拆分为小时和分钟
@@ -477,22 +480,42 @@ async function init(song_name: string, artist: string = "") {
 function init_requestAnimationFrame() {
     // 设定当前播放时间（需要逐帧调用）
     // 更新歌词组件动画（需要逐帧调用）
-    var last_time = Date.now();
-    requestAnimationFrame(function update() {
-        const flowSpeed = backgroundFlow.update(Date.now() - last_time, performance.now());
-        shaderAnimation?.setSpeed(backgroundFlow.enabled ? flowSpeed : legacyShaderSpeed);
-        const frameDelta = Date.now() - last_time;
-        last_time = Date.now();
+    let last_time = Date.now();
+    let lastInfoUpdate = 0;
+    let lastAnimationTime = 0;
+    const interval = 1000 / 60;
+    requestAnimationFrame(function update(timestamp) {
+        requestAnimationFrame(update);
+        const elapsed = timestamp - lastAnimationTime;
+        if (elapsed < interval - 0.1) return;
+        lastAnimationTime = timestamp - elapsed % interval;
+        const now = Date.now();
+        const frameDelta = Math.max(0, Math.min(250, now - last_time));
+        last_time = now;
+        if (window.song_data.isPlaying === 1) {
+            const duration = Number(window.song_data.end) || Infinity;
+            window.song_data.progress = Math.min(duration, window.song_data.progress + frameDelta);
+            if (Number.isFinite(duration) && duration > 0) {
+                window.song_data.progress_percent = window.song_data.progress / duration * 100;
+            }
+        }
+        if (now - lastInfoUpdate >= 100) {
+            lastInfoUpdate = now;
+            changeinfo();
+        }
+        const speed = backgroundFlow.enabled ? backgroundFlow.update(frameDelta, performance.now()) : legacyShaderSpeed;
+        shaderAnimation?.setSpeed(speed);
 
         try {
-            player.setCurrentTime(window.song_data.progress);
-            player.update(frameDelta);
+            if (player) {
+                player.setCurrentTime(window.song_data.progress);
+                player.update(frameDelta);
+            }
             // console.log("update",w);
         }
         catch (e) {
             // console.error("requestAnimationFrame 中的错误", e);
         }
-        requestAnimationFrame(update);
     }
     );
 }

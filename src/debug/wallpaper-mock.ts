@@ -46,9 +46,9 @@ export function installWallpaperMock() {
             }
         }
     } catch { /* Storage can be disabled in the browser. */ }
-    const applySettings = () => {
+    const applySettings = (changedKey?: SettingKey) => {
         window.wallpaperPropertyListener.applyUserProperties(Object.fromEntries(
-            Object.entries(settings).map(([key, value]) => [key, { value }]),
+            Object.entries(settings).filter(([key]) => !changedKey || key === changedKey).map(([key, value]) => [key, { value }]),
         ));
         try { localStorage.setItem(storageKey, JSON.stringify(settings)); } catch { /* Optional persistence. */ }
     };
@@ -163,8 +163,8 @@ export function installWallpaperMock() {
                 settings[key] = input.type === 'checkbox' ? input.checked : Number(input.value);
                 const output = panel.querySelector(`[data-value="${key}"]`);
                 if (output) output.textContent = String(settings[key]);
-                applySettings();
-                emitTimeline();
+                applySettings(key);
+                if (key === 'timesetoff') emitTimeline();
             };
         });
         panel.querySelector<HTMLButtonElement>('[data-reset]')!.onclick = () => {

@@ -5,6 +5,7 @@ export class ShaderAnimation {
     private lastFrameTime: number;
     private animationId: number | null = null;
     private speed: number = 1.0;
+    private lastRenderTime = 0;
     private program: WebGLProgram | null = null;
     private locations: any = {};
     private colors: {
@@ -173,8 +174,10 @@ export class ShaderAnimation {
     }
 
     private resize(): void {
-        this.canvas.width = this.canvas.offsetWidth;
-        this.canvas.height = this.canvas.offsetHeight;
+        // The background is a smooth gradient: avoid shading millions of redundant pixels.
+        const scale = Math.min(1, 1280 / Math.max(this.canvas.offsetWidth, this.canvas.offsetHeight, 1));
+        this.canvas.width = Math.max(1, Math.round(this.canvas.offsetWidth * scale));
+        this.canvas.height = Math.max(1, Math.round(this.canvas.offsetHeight * scale));
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     }
 
@@ -189,9 +192,15 @@ export class ShaderAnimation {
         this.colors[`layer${layer}${position}` as keyof typeof this.colors] = [r, g, b];
     }
 
-    private render(): void {
+    private render(timestamp = performance.now()): void {
+        this.animationId = requestAnimationFrame(time => this.render(time));
+        if (document.hidden) return;
+        const interval = 1000 / 60;
+        const elapsed = timestamp - this.lastRenderTime;
+        if (elapsed < interval - 0.1) return;
+        this.lastRenderTime = timestamp - elapsed % interval;
         const now = Date.now();
-        const deltaTime = (now - this.lastFrameTime) / 1000.0;
+        const deltaTime = Math.min(0.1, (now - this.lastFrameTime) / 1000.0);
         this.lastFrameTime = now;
         
         this.time += deltaTime * this.speed;
@@ -215,7 +224,6 @@ export class ShaderAnimation {
 
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
 
-        this.animationId = requestAnimationFrame(() => this.render());
     }
 
     public start(): void {
