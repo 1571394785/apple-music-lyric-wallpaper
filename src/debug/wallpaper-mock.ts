@@ -12,6 +12,12 @@ export const mockSong = {
 
 // These are every user property currently consumed by main.ts.
 const settingDefinitions = {
+    backgroundflowbeta: { label: '背景流动beta版', type: 'checkbox', value: false },
+    flowbasespeed: { label: 'Beta 基础速度', type: 'range', value: 0.4, min: 0, max: 2, step: 0.05 },
+    flowstrength: { label: 'Beta 节拍加速强度', type: 'range', value: 1.8, min: 0, max: 5, step: 0.1 },
+    flowsmoothing: { label: 'Beta 回落时间（毫秒）', type: 'range', value: 350, min: 50, max: 2000, step: 50 },
+    flowsensitivity: { label: 'Beta 节拍灵敏度', type: 'range', value: 1, min: 0.25, max: 3, step: 0.05 },
+    flowbpm: { label: 'Beta 手动 BPM（0 为自动）', type: 'number', value: 0, min: 0, max: 240, step: 1 },
     lyricpaddingleft: { label: '歌词左留白（vw）', type: 'range', value: 2, min: 0, max: 15, step: 0.1 },
     lyricpaddingright: { label: '歌词右留白（vw）', type: 'range', value: 2, min: 0, max: 15, step: 0.1 },
     lyricposition: { label: '当前歌词位置（屏幕高度 %）', type: 'range', value: 100 / 3, min: 10, max: 80, step: 0.1 },
@@ -48,6 +54,7 @@ export function installWallpaperMock() {
     };
     let position = mockSong.initialPosition;
     let playing = true;
+    let mockBpm = 120;
     let previous = performance.now();
     const listeners: Record<string, Listener | undefined> = {};
     const emitTimeline = () => listeners.timeline?.({ position, duration: mockSong.duration });
@@ -87,8 +94,10 @@ export function installWallpaperMock() {
             if (playing) position = (position + (now - previous) / 1000) % mockSong.duration;
             previous = now;
             emitTimeline();
+            const beatAge = now % (60000 / mockBpm);
+            const envelope = 0.02 + 0.8 * Math.exp(-beatAge / 65);
             listeners.audio?.(Array.from({ length: 128 }, (_, i) => playing
-                ? (0.15 + 0.6 * Math.abs(Math.sin(now / 350 + i * 0.37))) * Math.exp(-(i % 64) / 45) : 0));
+                ? envelope * (0.6 + 0.4 * Math.abs(Math.sin(i * 0.37))) * Math.exp(-(i % 64) / 65) : 0));
             const seek = panel.querySelector<HTMLInputElement>('[data-seek]');
             if (seek && document.activeElement !== seek) seek.value = String(position);
             const time = panel.querySelector('output');
@@ -104,6 +113,7 @@ export function installWallpaperMock() {
         panel.innerHTML = `<summary style="cursor:pointer">浏览器调试 · 晴天</summary>
             <div style="display:grid;gap:10px;padding-top:12px">
             <span>本地歌词快照 · 模拟频谱（无声音）</span>
+            <label>模拟音频 BPM<input data-mock-bpm type="number" min="60" max="180" value="${mockBpm}" style="width:70px"></label>
             <fieldset style="display:grid;gap:8px;border:1px solid #ffffff40;border-radius:8px"><legend>实时修改显示文字</legend>
             <label>歌名<input data-song="title" type="text" style="display:block;width:100%;box-sizing:border-box"></label>
             <label>歌手<input data-song="artist" type="text" style="display:block;width:100%;box-sizing:border-box"></label>
@@ -123,6 +133,9 @@ export function installWallpaperMock() {
             <button data-reset>恢复默认设置</button></fieldset>
             </div>`;
         document.body.appendChild(panel);
+        panel.querySelector<HTMLInputElement>('[data-mock-bpm]')!.oninput = event => {
+            mockBpm = Math.max(60, Math.min(180, Number((event.target as HTMLInputElement).value) || 120));
+        };
         panel.querySelectorAll<HTMLInputElement>('[data-song]').forEach(input => {
             const key = input.dataset.song as 'title' | 'artist' | 'album';
             input.value = mockSong[key];

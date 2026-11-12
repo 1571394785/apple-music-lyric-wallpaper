@@ -1,3 +1,4 @@
+import { BackgroundFlow } from "./background-flow";
 import { updateMarquee } from "./marquee";
 import { LyricPlayer } from "@applemusic-like-lyrics/core";
 import { download_lyric } from "./lyric";
@@ -41,6 +42,8 @@ const colorExtractor = new ColorExtractor();
 let lastCoverUrl = '';
 let lyricSizeFrame = 0;
 let lyricPositionPercent = 100 / 3;
+const backgroundFlow = new BackgroundFlow();
+let legacyShaderSpeed = 0.5;
 
 // 音频可视化相关变量
 let audioCanvas: HTMLCanvasElement | null = null;
@@ -49,6 +52,15 @@ let audioCanvasCtx: CanvasRenderingContext2D | null = null;
 
 // 音频监听器函数
 function wallpaperAudioListener(audioArray: number[]) {
+    backgroundFlow.audio(audioArray, performance.now());
+    const bassCount = Math.min(audioArray.length, Math.floor(audioArray.length * (window.diyin ?? 0.2)));
+    let bass = 0, total = 0;
+    for (let i = 0; i < audioArray.length; i++) {
+        total += audioArray[i];
+        if (i < bassCount) bass += audioArray[i];
+    }
+    legacyShaderSpeed = 0.5 + (total > 0 ? bass / total : 0) * (window.mingandu ?? 0.5) * 1.5;
+    if (!window.devtool) return;
     if (!audioCanvas || !audioCanvasCtx) {
         console.warn("Canvas not initialized:", { audioCanvas, audioCanvasCtx });
         return;
@@ -141,9 +153,7 @@ function wallpaperAudioListener(audioArray: number[]) {
     const mingandu = window.mingandu || 0.5;
     // 将 bassRatio (0-100) 转换为速度系数，例如 0.5-2.0 的范围
     const shaderSpeed = 0.5 + (bassRatio / 100) * mingandu * 1.5;
-    if (shaderAnimation) {
-        shaderAnimation.setSpeed(shaderSpeed);
-    }
+
 
     // 在canvas右上角绘制低频占比文字
     audioCanvasCtx.fillStyle = 'rgb(255,255,255)';
@@ -152,13 +162,25 @@ function wallpaperAudioListener(audioArray: number[]) {
     audioCanvasCtx.fillText(`低频占比: ${bassRatio.toFixed(1)}%`, audioCanvas.width - 20, 40);
     audioCanvasCtx.fillText(`低频范围: ${bassRange}/${audioArray.length}`, audioCanvas.width - 20, 70);
     audioCanvasCtx.fillText(`放大: ${amplification.toFixed(2)}x`, audioCanvas.width - 20, 100);
-    audioCanvasCtx.fillText(`Shader速度: ${shaderSpeed.toFixed(2)}x`, audioCanvas.width - 20, 130);
+    audioCanvasCtx.fillText(`背景: ${backgroundFlow.enabled ? 'Beta' : '低音'} ${backgroundFlow.enabled ? backgroundFlow.currentSpeed.toFixed(2) : shaderSpeed.toFixed(2)}x / BPM: ${(backgroundFlow.manualBpm || backgroundFlow.bpm).toFixed(0) || '0'}`, audioCanvas.width - 20, 130);
     audioCanvasCtx.fillText(`敏感度: ${mingandu.toFixed(2)}`, audioCanvas.width - 20, 160);
     audioCanvasCtx.textAlign = 'left'; // 恢复默认对齐
 }
 
 window.wallpaperPropertyListener = {
     applyUserProperties: function (properties) {
+        if (properties.backgroundflowbeta) backgroundFlow.enabled = Boolean(properties.backgroundflowbeta.value);
+        for (const [key, field, min, max] of [
+            ['flowbasespeed', 'baseSpeed', 0, 2],
+            ['flowstrength', 'strength', 0, 5],
+            ['flowsmoothing', 'smoothing', 50, 2000],
+            ['flowsensitivity', 'sensitivity', 0.25, 3],
+            ['flowbpm', 'manualBpm', 0, 240],
+        ] as const) {
+            if (!properties[key]) continue;
+            const value = Number(properties[key].value);
+            if (Number.isFinite(value)) backgroundFlow[field] = Math.max(min, Math.min(max, value));
+        }
         for (const [key, cssName] of [
             ['lyricpaddingleft', '--lyric-gap'],
             ['lyricpaddingright', '--lyric-right-padding'],
@@ -437,6 +459,7 @@ async function init(song_name: string, artist: string = "") {
     }
     cancelLyricAnimations();
     player.setLyricLines([]);
+    backgroundFlow.reset();
     try {
         const ly = await download_lyric(song_name, artist, request.signal);
         if (request.signal.aborted || version !== lyricRequestVersion) return;
@@ -456,10 +479,14 @@ function init_requestAnimationFrame() {
     // 更新歌词组件动画（需要逐帧调用）
     var last_time = Date.now();
     requestAnimationFrame(function update() {
+        const flowSpeed = backgroundFlow.update(Date.now() - last_time, performance.now());
+        shaderAnimation?.setSpeed(backgroundFlow.enabled ? flowSpeed : legacyShaderSpeed);
+        const frameDelta = Date.now() - last_time;
+        last_time = Date.now();
+
         try {
             player.setCurrentTime(window.song_data.progress);
-            player.update(Date.now() - last_time);
-            last_time = Date.now();
+            player.update(frameDelta);
             // console.log("update",w);
         }
         catch (e) {

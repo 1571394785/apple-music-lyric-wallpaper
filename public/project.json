@@ -6,15 +6,150 @@
     "supportsaudioprocessing": true,
     "supportsmediaintegration": true,
     "properties": {
-      "lyricpaddingleft": { "text": "歌词左留白（vw）", "type": "slider", "value": 2, "min": 0, "max": 15, "fraction": true, "precision": 1, "step": 0.1, "order": 6 },
-      "lyricpaddingright": { "text": "歌词右留白（vw）", "type": "slider", "value": 2, "min": 0, "max": 15, "fraction": true, "precision": 1, "step": 0.1, "order": 7 },
-      "lyricposition": { "text": "当前歌词位置（屏幕高度 %）", "type": "slider", "value": 33.333333333333336, "min": 10, "max": 80, "fraction": true, "precision": 1, "step": 0.1, "order": 8 },
-      "lyricsize": { "text": "歌词大小（%）", "type": "slider", "value": 100, "min": 50, "max": 200, "fraction": false, "order": 0 },
-      "mohu": { "text": "歌词模糊", "type": "bool", "value": false, "order": 1 },
-      "timesetoff": { "text": "歌词偏移（毫秒）", "type": "slider", "value": 0, "min": -60000, "max": 60000, "fraction": false, "order": 2 },
-      "diyin": { "text": "低频范围", "type": "slider", "value": 0.2, "min": 0.01, "max": 0.5, "fraction": true, "precision": 2, "order": 3 },
-      "mingandu": { "text": "音频敏感度", "type": "slider", "value": 0.5, "min": 0, "max": 5, "fraction": true, "precision": 1, "order": 4 },
-      "devtool": { "text": "显示频谱调试", "type": "bool", "value": false, "order": 5 }
+      "lyricpaddingleft": {
+        "text": "歌词左留白（vw）",
+        "type": "slider",
+        "value": 2,
+        "min": 0,
+        "max": 15,
+        "fraction": true,
+        "precision": 1,
+        "step": 0.1,
+        "order": 6
+      },
+      "lyricpaddingright": {
+        "text": "歌词右留白（vw）",
+        "type": "slider",
+        "value": 2,
+        "min": 0,
+        "max": 15,
+        "fraction": true,
+        "precision": 1,
+        "step": 0.1,
+        "order": 7
+      },
+      "lyricposition": {
+        "text": "当前歌词位置（屏幕高度 %）",
+        "type": "slider",
+        "value": 33.333333333333336,
+        "min": 10,
+        "max": 80,
+        "fraction": true,
+        "precision": 1,
+        "step": 0.1,
+        "order": 8
+      },
+      "lyricsize": {
+        "text": "歌词大小（%）",
+        "type": "slider",
+        "value": 100,
+        "min": 50,
+        "max": 200,
+        "fraction": false,
+        "order": 0
+      },
+      "mohu": {
+        "text": "歌词模糊",
+        "type": "bool",
+        "value": false,
+        "order": 1
+      },
+      "timesetoff": {
+        "text": "歌词偏移（毫秒）",
+        "type": "slider",
+        "value": 0,
+        "min": -60000,
+        "max": 60000,
+        "fraction": false,
+        "order": 2
+      },
+      "diyin": {
+        "text": "低频范围",
+        "type": "slider",
+        "value": 0.2,
+        "min": 0.01,
+        "max": 0.5,
+        "fraction": true,
+        "precision": 2,
+        "order": 3
+      },
+      "mingandu": {
+        "text": "音频敏感度",
+        "type": "slider",
+        "value": 0.5,
+        "min": 0,
+        "max": 5,
+        "fraction": true,
+        "precision": 1,
+        "order": 4
+      },
+      "devtool": {
+        "text": "显示频谱调试",
+        "type": "bool",
+        "value": false,
+        "order": 5
+      },
+      "backgroundflowbeta": {
+        "text": "背景流动beta版",
+        "type": "bool",
+        "value": false,
+        "order": 9
+      },
+      "flowbasespeed": {
+        "text": "Beta 基础速度",
+        "type": "slider",
+        "value": 0.4,
+        "min": 0,
+        "max": 2,
+        "step": 0.05,
+        "fraction": true,
+        "precision": 2,
+        "order": 10
+      },
+      "flowstrength": {
+        "text": "Beta 节拍加速强度",
+        "type": "slider",
+        "value": 1.8,
+        "min": 0,
+        "max": 5,
+        "step": 0.1,
+        "fraction": true,
+        "precision": 2,
+        "order": 11
+      },
+      "flowsmoothing": {
+        "text": "Beta 回落时间（毫秒）",
+        "type": "slider",
+        "value": 350,
+        "min": 50,
+        "max": 2000,
+        "step": 50,
+        "fraction": false,
+        "precision": 0,
+        "order": 12
+      },
+      "flowsensitivity": {
+        "text": "Beta 节拍灵敏度",
+        "type": "slider",
+        "value": 1,
+        "min": 0.25,
+        "max": 3,
+        "step": 0.05,
+        "fraction": true,
+        "precision": 2,
+        "order": 13
+      },
+      "flowbpm": {
+        "text": "Beta 手动 BPM（0 为自动）",
+        "type": "slider",
+        "value": 0,
+        "min": 0,
+        "max": 240,
+        "step": 1,
+        "fraction": false,
+        "precision": 0,
+        "order": 14
+      }
     }
   }
 }
