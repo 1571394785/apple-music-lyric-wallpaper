@@ -6,5 +6,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('mock') !== 
     installWallpaperMock();
 }
 await import('./main');
+// Replay startup properties only after main has initialized all of its state.
+window.wallpaperPropertyBridge?.connect(window.wallpaperPropertyListener);
 }
 void bootstrap();
