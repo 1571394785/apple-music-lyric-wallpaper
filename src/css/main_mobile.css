@@ -19,10 +19,10 @@ body {
     position: fixed;
     z-index: 1;
     top: calc(3vh + 24vmin);
-    left: 0;
+    left: max(0px, calc(2px + var(--lyric-gap, 2vw) - 2vw));
+    right: max(0px, calc(2px + var(--lyric-right-padding, 2vw) - 2vw));
     bottom: 0;
-    width: 100vw;
-    padding: 2px;
+    padding: 2px 0;
     box-sizing: border-box;
     overflow: hidden;
 }

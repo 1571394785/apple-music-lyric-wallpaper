@@ -12,6 +12,9 @@ export const mockSong = {
 
 // These are every user property currently consumed by main.ts.
 const settingDefinitions = {
+    lyricpaddingleft: { label: '歌词左留白（vw）', type: 'range', value: 2, min: 0, max: 15, step: 0.1 },
+    lyricpaddingright: { label: '歌词右留白（vw）', type: 'range', value: 2, min: 0, max: 15, step: 0.1 },
+    lyricposition: { label: '当前歌词位置（屏幕高度 %）', type: 'range', value: 100 / 3, min: 10, max: 80, step: 0.1 },
     lyricsize: { label: '歌词大小（%）', type: 'range', value: 100, min: 50, max: 200, step: 5 },
     mohu: { label: '歌词模糊', type: 'checkbox', value: false },
     devtool: { label: '显示频谱调试', type: 'checkbox', value: false },

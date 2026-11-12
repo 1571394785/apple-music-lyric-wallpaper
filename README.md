@@ -2,6 +2,10 @@
 
 ## 浏览器本地调试
 
+布局属性：`lyricpaddingleft` / `lyricpaddingright` 默认 2，范围 0～15（vw）；横屏左侧从封面信息区域右缘起算，右侧从屏幕边缘起算。竖屏保留原有默认 2px 留白，并按相对默认值的 vw 差量调整。`lyricposition` 默认 100/3，范围 10～80，表示当前歌词行中心在屏幕高度中的百分比；当目标在歌词区域外时会限制到区域边界。修改布局会重建已有歌词的几何和高亮遮罩，不请求后台。
+
+打包并复制到本机 Wallpaper Engine 测试目录：`npm run pack:wallpaper`。目标固定为 `E:\SteamLibrary\steamapps\common\wallpaper_engine\projects\myprojects\index`，复制后校验产物，保留目标已有的预览图、创意工坊信息和属性值，合并新属性。
+
 歌词大小属性为 `lyricsize`，默认 `100`（当前大小），范围 `50`～`200`，单位为百分比；Wallpaper 和浏览器调试面板均可实时调节。`public/project.json` 在构建时复制到 `dist/project.json`，导入 Wallpaper Engine 时使用完整的 `dist` 文件夹。更新已有壁纸时，可将其中的 `general.properties.lyricsize` 合并到原壁纸配置，保留原有的标题和创意工坊信息。
 
 字号使用当前安装的 AMLL Core 0.1.3 官方 CSS 变量 `--amll-lyric-player-font-size`，设置在宿主 `#app` 上，字号变化后等待库的 ResizeObserver 更新尺寸，再通过公开的 `getLyricLines()` / `setLyricLines()` 重建已加载歌词的逐字几何与遮罩，并调用 `calcLayout(true, true)` 重新布局；不会重新请求后台；不调用内部 `rebuildStyle()`。100% 时移除覆盖，直接采用库默认值 `max(min(6vh, 8vw), 12px)`。对应上游源码：https://github.com/amll-dev/applemusic-like-lyrics/blob/6d9cb894c6510995d6a30ace7a1814dc333d57d1/packages/core/src/lyric-player/index.ts#L175
@@ -11,7 +15,7 @@
 
 - `src/debug/qingtian.json`：从项目原有歌词 API 获取的《晴天》（周杰伦）逐字歌词快照，保留原始返回格式，仍经过正式程序的歌词解析器。
 - `src/debug/wallpaper-mock.ts`：模拟媒体回调、歌曲元数据、本地生成封面、播放时间和 128 项频谱。修改 `mockSong` 可调整显示信息、时长和初始位置；默认从 29.264 秒开始，直接预览正文歌词。
-- 左下角“浏览器调试”面板可播放/暂停、拖动进度、重新发送歌曲；提供现有程序支持的全部 6 项 Wallpaper 设置：歌词大小、歌词模糊、频谱调试显示、歌词偏移、低频范围和音频敏感度。设置即时生效并保存到浏览器，可恢复默认。频谱是模拟数据，不播放音乐。
+- 左下角“浏览器调试”面板可播放/暂停、拖动进度、重新发送歌曲；提供现有程序支持的全部 9 项 Wallpaper 设置：歌词左留白、右留白、当前歌词垂直位置、歌词大小、歌词模糊、频谱调试显示、歌词偏移、低频范围和音频敏感度。设置即时生效并保存到浏览器，可恢复默认。频谱是模拟数据，不播放音乐。
 - `src/debug/qingtian-cover.png`：生成的晴日湖景测试封面，由桩函数导入；正式构建不会包含这张调试图片。
 - 使用 `?mock=0` 可关闭模拟；检测到真实 Wallpaper Engine 媒体接口时也不会安装桩函数。
 - `npm run build` 的正式产物不包含调试模块或歌词快照，继续使用真实宿主接口和后台。

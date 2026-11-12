@@ -40,6 +40,7 @@ window.mohu = false;
 const colorExtractor = new ColorExtractor();
 let lastCoverUrl = '';
 let lyricSizeFrame = 0;
+let lyricPositionPercent = 100 / 3;
 
 // 音频可视化相关变量
 let audioCanvas: HTMLCanvasElement | null = null;
@@ -158,6 +159,23 @@ function wallpaperAudioListener(audioArray: number[]) {
 
 window.wallpaperPropertyListener = {
     applyUserProperties: function (properties) {
+        for (const [key, cssName] of [
+            ['lyricpaddingleft', '--lyric-gap'],
+            ['lyricpaddingright', '--lyric-right-padding'],
+        ] as const) {
+            if (!properties[key]) continue;
+            const value = Number(properties[key].value);
+            if (!Number.isFinite(value)) continue;
+            document.documentElement.style.setProperty(cssName, `${Math.max(0, Math.min(15, value))}vw`);
+            scheduleLyricRebuild();
+        }
+        if (properties.lyricposition) {
+            const value = Number(properties.lyricposition.value);
+            if (Number.isFinite(value)) {
+                lyricPositionPercent = Math.max(10, Math.min(80, value));
+                scheduleLyricRebuild();
+            }
+        }
         if (properties.lyricsize) {
             const value = Number(properties.lyricsize.value);
             if (Number.isFinite(value)) {
@@ -174,23 +192,7 @@ window.wallpaperPropertyListener = {
                     host?.style.setProperty('--amll-lyric-player-font-size',
                         `max(min(${6 * scale}vh, ${8 * scale}vw), ${12 * scale}px)`);
                 }
-                // A font change need not resize the content box observed by AMLL.
-                // Coalesce slider events and explicitly reflow after CSS takes effect.
-                cancelAnimationFrame(lyricSizeFrame);
-                lyricSizeFrame = requestAnimationFrame(() => {
-                    // Allow AMLL's ResizeObserver to consume the new content-box first.
-                    lyricSizeFrame = requestAnimationFrame(() => {
-                        lyricSizeFrame = 0;
-                        if (!player) return;
-                        const lines = player.getLyricLines();
-                        cancelLyricAnimations();
-                        // Rebuild word geometry and highlighting masks through the public API.
-                        player.setLyricLines(lines);
-                        player.setEnableSpring(true);
-                        player.resetScroll();
-                        player.calcLayout(true, true);
-                    });
-                });
+                scheduleLyricRebuild();
             }
         }
         if (properties.timesetoff) {
@@ -341,6 +343,38 @@ function get_current_time(event: any) {
 var player: LyricPlayer
 let lyricRequest: AbortController | undefined;
 let lyricRequestVersion = 0;
+function scheduleLyricRebuild() {
+    // A font change need not resize the content box observed by AMLL.
+    // Coalesce slider events and explicitly reflow after CSS takes effect.
+    cancelAnimationFrame(lyricSizeFrame);
+    lyricSizeFrame = requestAnimationFrame(() => {
+        // Allow AMLL's ResizeObserver to consume the new content-box first.
+        lyricSizeFrame = requestAnimationFrame(() => {
+            lyricSizeFrame = 0;
+            if (!player) return;
+            const lines = player.getLyricLines();
+            cancelLyricAnimations();
+            // Rebuild word geometry and highlighting masks through the public API.
+            player.setLyricLines(lines);
+            player.setEnableSpring(true);
+            player.resetScroll();
+            alignCurrentLyric();
+        });
+    });
+}
+
+function alignCurrentLyric() {
+    if (!player) return;
+    const element = player.getElement();
+    const rect = element.getBoundingClientRect();
+    if (element.clientHeight <= 0) return;
+    // AMLL expects a container-relative ratio; the requested anchor is screen-relative.
+    const position = Math.max(0, Math.min(1,
+        (window.innerHeight * lyricPositionPercent / 100 - rect.top) / element.clientHeight));
+    player.setAlignAnchor('center');
+    player.setAlignPosition(position);
+    player.calcLayout(true, true);
+}
 function cancelLyricAnimations() {
     // AMLL 0.1.x detaches offscreen lines before disposal, so the player subtree
     // alone misses their animations. Include every line renderer, even hidden ones.
@@ -371,7 +405,6 @@ async function init(song_name: string, artist: string = "") {
     if (!player) {
         player = new LyricPlayer(); // 创建歌词播放组件
         player.setEnableBlur(window.mohu); // 关闭模糊效果
-        player.setAlignPosition(0.2)
         let html_player = player.getElement()
         html_player.id = "lyric-player"
         const appElement = document.getElementById("app");
@@ -381,6 +414,9 @@ async function init(song_name: string, artist: string = "") {
             host.id = 'lyric-host';
             host.appendChild(html_player);
             appElement.appendChild(host);
+            const alignmentObserver = new ResizeObserver(alignCurrentLyric);
+            alignmentObserver.observe(html_player);
+            alignCurrentLyric();
 
             // 创建遮罩层以阻止 hover 效果
             const overlay = document.createElement('div');
