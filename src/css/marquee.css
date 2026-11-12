@@ -1,0 +1,34 @@
+/* Shared by desktop and portrait layouts; IDs override their old ellipsis rules. */
+#name.metadata-marquee,
+#artist.metadata-marquee,
+#album.metadata-marquee {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
+}
+
+.metadata-marquee__track {
+    display: flex;
+    width: max-content;
+    max-width: none;
+}
+
+.metadata-marquee__text {
+    display: block;
+    flex: 0 0 auto;
+    white-space: pre;
+}
+
+.metadata-marquee__text[aria-hidden] {
+    display: none;
+}
+
+.is-overflowing .metadata-marquee__text[aria-hidden] {
+    display: block;
+}
+
+.metadata-marquee.is-overflowing {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 12px), transparent);
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 12px), transparent);
+}

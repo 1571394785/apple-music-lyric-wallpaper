@@ -5,7 +5,7 @@ import coverUrl from './qingtian-cover.png';
 export const mockSong = {
     title: '晴天 · 那些年一起听过的夏日旋律与青春回忆 · 超长歌曲名称滚动效果测试完整版',
     artist: '周杰伦 / 超长歌手名称滚动测试 / 夏日音乐特别企划联合演出 / 青春回忆交响乐团与特别嘉宾',
-    album: '叶惠美',
+    album: '叶惠美 · 夏日珍藏纪念专辑 · 超长专辑名称滚动测试 · 完整收录青春记忆与那些年听过的旋律',
     duration: 269, initialPosition: 29.264,
     thumbnail: coverUrl,
 };
