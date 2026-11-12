@@ -224,7 +224,11 @@ window.wallpaperPropertyListener = {
         }
         if (properties.timesetoff) {
             console.log("timeoffset改变", properties.timesetoff.value);
-            window.trans_global = properties.timesetoff.value;
+            const value = Number(properties.timesetoff.value);
+            if (Number.isFinite(value)) {
+                if (window.song_data) window.song_data.progress += value - window.trans_global;
+                window.trans_global = value;
+            }
         }
         if (properties.diyin) {
             console.log("低音响应改变", properties.diyin.value);
@@ -267,7 +271,27 @@ window.wallpaperPropertyListener = {
         }
     }
 }
+function updateOffsetDebug() {
+    if (!window.devtool) return;
+    for (const [id, value] of [
+        ['offset-wallpaper', window.trans_global],
+        ['offset-temporary', window.trans],
+        ['offset-total', window.trans_global + window.trans],
+    ] as const) {
+        const element = document.getElementById(id);
+        const text = `${value > 0 ? '+' : ''}${value} ms`;
+        if (element && element.textContent !== text) element.textContent = text;
+    }
+}
+
+function setTemporaryOffset(value: number) {
+    window.song_data.progress += value - window.trans;
+    window.trans = value;
+    changeinfo();
+}
+
 function changeinfo() {
+    updateOffsetDebug();
     // <div id="container">
     //   <div id="cover" src="res/spotify-logo.png"></div>
     //   <p id="name">name</p>
@@ -620,19 +644,19 @@ if (div_artist) {
 const div_album = document.getElementById("album");
 if (div_album) {
     div_album.addEventListener("click", function () {
-        window.trans = 0;
+        setTemporaryOffset(0);
     });
 }
 const div_start = document.getElementById("start");
 if (div_start) {
     div_start.addEventListener("click", function () {
-        window.trans -= 500;
+        setTemporaryOffset(window.trans - 500);
     });
 }
 const div_end = document.getElementById("end");
 if (div_end) {
     div_end.addEventListener("click", function () {
-        window.trans += 500;
+        setTemporaryOffset(window.trans + 500);
     }
     );
 }

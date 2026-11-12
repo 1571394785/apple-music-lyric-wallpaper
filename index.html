@@ -17,7 +17,15 @@
   <div id="app">
     <div id="background"><canvas id="draw_background"></canvas></div>
     <div id="devtool">
-      <p>调试工具</p><canvas id="music_bar" height="600" width="800"></canvas>
+      <p>调试工具</p>
+      <div id="offset-debug" style="padding:0 12px 12px;font:14px/1.8 system-ui">
+        <div>Wallpaper 歌词轴偏移：<span id="offset-wallpaper">0 ms</span></div>
+        <div>点击时间临时偏移：<span id="offset-temporary">0 ms</span></div>
+        <div>实际总偏移：<span id="offset-total">0 ms</span></div>
+        <div>点击已播放时间：−500 ms；点击剩余时间：+500 ms；点击专辑：清零临时偏移。</div>
+        <div>正值：歌词提前；负值：歌词延后。</div>
+      </div>
+      <canvas id="music_bar" height="600" width="800"></canvas>
     </div>
     <div id="container">
 
