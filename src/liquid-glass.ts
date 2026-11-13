@@ -3,6 +3,14 @@ import './css/liquid-glass.css';
 
 type Material = { element: HTMLElement; config: Partial<GlassConfig> };
 const scenes = new Set<GlassScene>();
+export const progressGlassDefaults = {
+    refraction: .85, edgeHighlight: .015, specular: .01, fresnel: .07,
+    zRadius: 3, brightness: .12,
+};
+export const progressGlassSettings = { ...progressGlassDefaults };
+export function updateProgressGlass(values: Partial<typeof progressGlassSettings>) {
+    Object.assign(progressGlassSettings, values);
+}
 
 /** Copy live pixels immediately after the wallpaper WebGL draw, before its
  * framebuffer is discarded. Text and controls remain ordinary accessible DOM. */
@@ -130,10 +138,7 @@ class GlassScene {
 // One surface per scene: never composite nested glass on top of glass.
 export function createProgressGlass() {
     return new GlassScene(document.querySelector<HTMLElement>('#progress-material')!, [
-        { element: document.querySelector<HTMLElement>('#progress_bar')!, config: {
-            blurAmount: 0, refraction: .45, brightness: .12,
-            edgeHighlight: .045, specular: .055, fresnel: .22, zRadius: 3,
-        } },
+        { element: document.querySelector<HTMLElement>('#progress_bar')!, config: progressGlassSettings },
     ]);
 }
 

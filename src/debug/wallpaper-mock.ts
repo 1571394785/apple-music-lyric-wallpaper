@@ -1,6 +1,7 @@
 import lyrics from './qingtian.json';
 import coverUrl from './qingtian-cover.png';
 import { LYRIC_API } from '../lyric';
+import { progressGlassDefaults, progressGlassSettings, updateProgressGlass } from '../liquid-glass';
 
 const mockVersions = [
     ['qq:0039MnYb0qxYhV', '叶惠美'],
@@ -135,7 +136,7 @@ export function installWallpaperMock() {
                 ? envelope * (0.6 + 0.4 * Math.abs(Math.sin(i * 0.37))) * Math.exp(-(i % 64) / 65) : 0));
             const seek = panel.querySelector<HTMLInputElement>('[data-seek]');
             if (seek && document.activeElement !== seek) seek.value = String(position);
-            const time = panel.querySelector('output');
+            const time = panel.querySelector('[data-mock-time]');
             if (time) time.textContent = `${position.toFixed(1)} / ${mockSong.duration} 秒`;
         }, 50);
     }, 10);
@@ -145,8 +146,28 @@ export function installWallpaperMock() {
         panel = document.createElement('details');
         panel.setAttribute('open', '');
         panel.style.cssText = 'max-height:75vh;overflow:auto;position:fixed;bottom:12px;left:12px;z-index:100000;color:white;background:#18202eed;padding:12px;border-radius:12px;font:14px system-ui;max-width:300px;box-shadow:0 4px 24px #0006';
+        const glassTest = new URLSearchParams(location.search).get('glassTest') === '1';
+        if (glassTest) panel.style.cssText += ';left:auto;right:12px;top:12px;bottom:auto;max-height:calc(100vh - 24px);width:280px';
+        const glassControls = [
+            ['refraction', '折射强度', 0, 2, .01],
+            ['edgeHighlight', '边缘反光', 0, .3, .005],
+            ['specular', '镜面高光', 0, .5, .005],
+            ['fresnel', '边缘反射', 0, 1.5, .01],
+            ['zRadius', '玻璃弧面深度', 2, 4.5, .1],
+            ['brightness', '亮度', -.2, .4, .01],
+        ] as const;
         panel.innerHTML = `<summary style="cursor:pointer">浏览器调试 · 晴天</summary>
             <div style="display:grid;gap:10px;padding-top:12px">
+            <fieldset style="display:grid;gap:8px;border:1px solid #ffffff40;border-radius:8px"><legend>进度条玻璃 · 实时调节</legend>
+            <small>看左侧实际进度条调节，参数可复制发给我。仅用于本次浏览器测试。</small>
+            ${glassControls.map(([key, label, min, max, step]) => `<label>${label} <output data-glass-value="${key}">${progressGlassSettings[key]}</output><input aria-label="${label}" data-glass="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${progressGlassSettings[key]}" style="display:block;width:100%"></label>`).join('')}
+            <label>参数汇总<textarea data-glass-summary aria-label="玻璃参数汇总" readonly rows="8" style="display:block;box-sizing:border-box;width:100%;font:12px/1.4 monospace;user-select:text"></textarea></label>
+            <button data-glass-reset>恢复本次初始参数</button>
+            </fieldset>
+            <button data-play>暂停</button>
+            <input aria-label="播放进度" data-seek type="range" min="0" max="${mockSong.duration}" step="0.1" value="${position}">
+            <output data-mock-time></output>
+            <div ${glassTest ? 'hidden' : ''}>
             <span>本地歌词快照 · 模拟频谱（无声音）</span>
             <label>模拟音频 BPM<input data-mock-bpm type="number" min="60" max="180" value="${mockBpm}" style="width:70px"></label>
             <fieldset style="display:grid;gap:8px;border:1px solid #ffffff40;border-radius:8px"><legend>实时修改显示文字</legend>
@@ -155,9 +176,7 @@ export function installWallpaperMock() {
             <label>专辑<input data-song="album" type="text" style="display:block;width:100%;box-sizing:border-box"></label>
             <small>输入后即时更新，歌词仍使用《晴天》快照。</small>
             </fieldset>
-            <button data-play>暂停</button>
-            <input aria-label="播放进度" data-seek type="range" min="0" max="${mockSong.duration}" step="0.1" value="${position}">
-            <output></output><button data-reload>重新发送歌曲信息</button>
+            <button data-reload>重新发送歌曲信息</button>
             <fieldset style="display:grid;gap:12px;border:1px solid #ffffff40;border-radius:8px"><legend>Wallpaper 设置</legend>
             ${Object.entries(settingDefinitions).map(([key, definition]) => {
                 const value = settings[key as SettingKey];
@@ -165,9 +184,30 @@ export function installWallpaperMock() {
                     ? `<label><input data-setting="${key}" type="checkbox" ${value ? 'checked' : ''}> ${definition.label}</label>`
                     : `<label>${definition.label} <output data-value="${key}">${value}</output><input data-setting="${key}" aria-label="${definition.label}" type="${definition.type}" min="${definition.min}" max="${definition.max}" step="${definition.step}" value="${value}" style="width:100%;box-sizing:border-box"></label>`;
             }).join('')}
-            <button data-reset>恢复默认设置</button></fieldset>
+            <button data-reset>恢复默认设置</button></fieldset></div>
             </div>`;
         document.body.appendChild(panel);
+        const glassSummary = panel.querySelector<HTMLTextAreaElement>('[data-glass-summary]')!;
+        function refreshGlass() {
+            glassSummary.value = JSON.stringify(progressGlassSettings, null, 2);
+            panel.querySelectorAll<HTMLInputElement>('[data-glass]').forEach(input => {
+                const key = input.dataset.glass as keyof typeof progressGlassSettings;
+                input.value = String(progressGlassSettings[key]);
+                panel.querySelector(`[data-glass-value="${key}"]`)!.textContent = input.value;
+            });
+        }
+        panel.querySelectorAll<HTMLInputElement>('[data-glass]').forEach(input => {
+            input.oninput = () => {
+                updateProgressGlass({ [input.dataset.glass!]: Number(input.value) });
+                refreshGlass();
+            };
+        });
+        panel.querySelector<HTMLButtonElement>('[data-glass-reset]')!.onclick = () => {
+            updateProgressGlass(progressGlassDefaults);
+            refreshGlass();
+        };
+        glassSummary.onclick = () => glassSummary.select();
+        refreshGlass();
         panel.querySelector<HTMLInputElement>('[data-mock-bpm]')!.oninput = event => {
             mockBpm = Math.max(60, Math.min(180, Number((event.target as HTMLInputElement).value) || 120));
         };
