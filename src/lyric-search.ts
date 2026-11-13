@@ -1,7 +1,7 @@
 import { searchSongs, type SongMatch } from './lyric';
 import { observeProxy } from './lyric-proxy';
 import './css/lyric-search.css';
-import { getDisplacementFilter } from './vendor/liquid-glass';
+import { createSearchGlass } from './liquid-glass';
 
 interface Options {
     getSong(): { name: string; artist: string };
@@ -58,22 +58,8 @@ export function createLyricSearch(options: Options) {
     let layoutTimer = 0;
     let isOpen = false;
     let appWasInert = false;
-    const glassSizes = new WeakMap<HTMLElement, string>();
-    const glassButtons = [back.querySelector<HTMLButtonElement>('[data-search-close]')!, previous, next, submit];
-    for (const button of glassButtons) button.classList.add('liquid-control');
-
-    function refreshGlassControls() {
-        if (!CSS.supports('backdrop-filter', 'url("#glass")')) return;
-        for (const button of glassButtons) {
-            const width = button.clientWidth;
-            const height = button.clientHeight;
-            const size = `${width}:${height}`;
-            if (!width || !height || glassSizes.get(button) === size) continue;
-            glassSizes.set(button, size);
-            const filter = getDisplacementFilter({ width, height, radius: Math.min(width, height) / 2, depth: 3, strength: 10 });
-            button.style.setProperty('--liquid-refraction', `url("${filter}")`);
-        }
-    }
+    let glass: ReturnType<typeof createSearchGlass> | undefined;
+    let glassTimer = 0;
 
     function restoreInline() {
         if (back.parentElement !== home) home.appendChild(back);
@@ -116,7 +102,6 @@ export function createLyricSearch(options: Options) {
         card.classList.toggle('is-flipped', !needsModal);
         container.classList.toggle('is-searching', !needsModal);
         back.classList.toggle('is-compact', height < 360 || width < 340);
-        refreshGlassControls();
         const fittedLimit = Math.max(1, Math.min(3, Math.floor(results.clientHeight / 62)));
         if (!selecting && fittedLimit !== limit) {
             limit = fittedLimit;
@@ -170,6 +155,7 @@ export function createLyricSearch(options: Options) {
     }
 
     function open(value: boolean) {
+        clearTimeout(glassTimer);
         clearTimeout(focusTimer);
         clearTimeout(layoutTimer);
         isOpen = value;
@@ -182,9 +168,15 @@ export function createLyricSearch(options: Options) {
         back.setAttribute('aria-hidden', String(!value));
         if (value) {
             fitLayout();
+            // Let the flip finish before measuring the visible glass surfaces.
+            glassTimer = window.setTimeout(() => {
+                if (isOpen && !glass) glass = createSearchGlass(back);
+            }, back.classList.contains('is-modal') ? 0 : 560);
             if (!lastSearch) runSearch();
             focusTimer = window.setTimeout(() => submit.focus({ preventScroll: true }), 450);
         } else {
+            glass?.destroy();
+            glass = undefined;
             if (back.parentElement === stage) restoreInline();
             card.classList.remove('is-flipped');
             container.classList.remove('is-searching');

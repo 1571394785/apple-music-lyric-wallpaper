@@ -4,6 +4,7 @@ import { LyricPlayer } from "@applemusic-like-lyrics/core";
 import { download_lyric, downloadLyricById } from "./lyric";
 import { createLyricSearch } from './lyric-search';
 import './css/lyric-alignment.css';
+import { createProgressGlass, updateGlassBackground } from './liquid-glass';
 import { ShaderAnimation, ColorExtractor } from "./shader";
 
 declare global {
@@ -613,12 +614,14 @@ setTimeout(() => {
 let shaderAnimation: ShaderAnimation | null = null;
 try {
     shaderAnimation = new ShaderAnimation('draw_background');
+    shaderAnimation.onRender = updateGlassBackground;
     shaderAnimation.setColor(1, 'a', '#000000');
     shaderAnimation.setColor(1, 'b', '#000000');
     shaderAnimation.setColor(2, 'a', '#001A23');
     shaderAnimation.setColor(2, 'b', '#000000');
     shaderAnimation.start();
     shaderAnimation.setSpeed(1.0); // Set initial speed
+    createProgressGlass();
 } catch (error) {
     console.error('Failed to initialize shader animation:', error);
 }

@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "patch-package": "^8.0.1",
     "typescript": "~5.6.2",
     "vite": "^6.0.1",
     "vite-plugin-wasm": "^3.4.1"
@@ -23,6 +24,7 @@
     "@pixi/filter-blur": "^7.4.2",
     "@pixi/filter-bulge-pinch": "^5.1.1",
     "@pixi/filter-color-matrix": "^7.4.2",
-    "@pixi/sprite": "^7.4.2"
+    "@pixi/sprite": "^7.4.2",
+    "@ybouane/liquidglass": "^1.0.3"
   }
 }

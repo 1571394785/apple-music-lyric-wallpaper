@@ -1,4 +1,5 @@
 export class ShaderAnimation {
+    public onRender?: (canvas: HTMLCanvasElement) => void;
     private canvas: HTMLCanvasElement;
     private gl: WebGLRenderingContext;
     private time: number = 0;
@@ -223,6 +224,7 @@ export class ShaderAnimation {
         this.gl.uniform3fv(this.locations.color2b, this.colors.layer2b);
 
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
+        this.onRender?.(this.canvas);
 
     }
 

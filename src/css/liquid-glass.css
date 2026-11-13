@@ -1,0 +1,17 @@
+/* Shader canvases provide materials; the original DOM keeps focus/text/clicks. */
+.liquid-material-layer { position: absolute; inset: 0; z-index: -1; pointer-events: none; isolation: isolate; overflow: hidden; border-radius: inherit; }
+.liquid-material-source { position: absolute; inset: 0; width: 100%; height: 100%; visibility: hidden; }
+.liquid-material-surface { position: absolute; isolation: isolate; pointer-events: none; }
+#progress-material { position: relative; isolation: isolate; width: 100%; height: clamp(9px, 1.2 * var(--info-unit), 14px); margin: 5px 0 8px; }
+#progress-material #progress, #progress-material #progress_bar { position: absolute; inset: 0 auto auto 0; height: 100%; border-radius: 99px; backdrop-filter: none; }
+#progress-material #progress { width: 100%; background: #ffffff38; }
+#progress-material #progress_bar { background: #ffffffb3; }
+#progress-material.has-liquid-material #progress { background: #ffffff08; }
+#progress-material.has-liquid-material #progress_bar { background: #ffffff35; }
+.cover-card__back.has-liquid-material { background: transparent; border-color: transparent; box-shadow: none; }
+.has-liquid-material .lyric-search__modes, .has-liquid-material .lyric-search__query, .has-liquid-material .lyric-search__results { background: transparent; border-color: transparent; }
+.has-liquid-material .lyric-search__header button, .has-liquid-material .lyric-search__pages button { background: transparent; box-shadow: none; }
+.has-liquid-material .lyric-search__modes button { background: transparent; box-shadow: none; }
+.has-liquid-material .lyric-search__modes [aria-pressed='true'] { background: #ffffff26; }
+.has-liquid-material .lyric-search__query button { background: #168aff55; box-shadow: none; }
+.has-liquid-material .lyric-search__song:hover { background: #ffffff14; }
