@@ -3,6 +3,7 @@ import { updateMarquee } from "./marquee";
 import { LyricPlayer } from "@applemusic-like-lyrics/core";
 import { download_lyric, downloadLyricById } from "./lyric";
 import { createLyricSearch } from './lyric-search';
+import './css/lyric-alignment.css';
 import { ShaderAnimation, ColorExtractor } from "./shader";
 
 declare global {
@@ -464,6 +465,9 @@ async function init(song_name: string, artist: string = "", songId = manualLyric
     const version = ++lyricRequestVersion;
     if (!player) {
         player = new LyricPlayer(); // 创建歌词播放组件
+        // Use the library's exported class name, not its generated JSS suffix.
+        player.getElement().getElementsByClassName(player.style.classes.interludeDots)[0]
+            ?.classList.add('lyric-interlude-dots');
         player.setEnableBlur(window.mohu); // 关闭模糊效果
         let html_player = player.getElement()
         html_player.id = "lyric-player"

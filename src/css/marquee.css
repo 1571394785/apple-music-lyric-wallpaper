@@ -3,7 +3,7 @@
 #artist.metadata-marquee,
 #album.metadata-marquee {
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
     white-space: nowrap;
     text-overflow: clip;
 }
@@ -24,11 +24,20 @@
     display: none;
 }
 
-.is-overflowing .metadata-marquee__text[aria-hidden] {
+/* Extend only the clipping viewport; padding preserves the original text origin.
+   The entire left fade sits before x=0, so aligned text stays fully opaque. */
+.metadata-marquee__viewport {
     display: block;
+    margin-left: -12px;
+    padding-left: 12px;
+    overflow: hidden;
 }
 
-.metadata-marquee.is-overflowing {
+.metadata-marquee.is-overflowing .metadata-marquee__viewport {
     -webkit-mask-image: linear-gradient(to right, transparent, #000 12px, #000 calc(100% - 12px), transparent);
     mask-image: linear-gradient(to right, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+}
+
+.is-overflowing .metadata-marquee__text[aria-hidden] {
+    display: block;
 }

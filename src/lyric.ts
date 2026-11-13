@@ -1,3 +1,4 @@
+import { trackProxy } from './lyric-proxy';
 export const LYRIC_API = 'http://39.104.86.15/spotify_like_applemusic/background/get_lyric.py';
 
 export interface SongMatch {
@@ -9,19 +10,26 @@ export interface SongMatch {
     cover: string;
 }
 
-async function requestApi(body: BodyInit, signal?: AbortSignal) {
-    const response = await fetch(LYRIC_API, { method: 'POST', body, signal });
-    if (!response.ok) throw new Error('暂时无法连接歌词服务，请重试');
-    let data;
+async function requestApi(body: FormData | URLSearchParams, signal?: AbortSignal) {
+    const tracking = trackProxy(LYRIC_API, body);
+    let route;
     try {
-        data = await response.json();
-    } catch {
-        throw new Error('歌词服务暂时未返回有效结果，请稍后再试');
+        const response = await fetch(LYRIC_API, { method: 'POST', body, signal });
+        if (!response.ok) throw new Error('暂时无法连接歌词服务，请重试');
+        let data;
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error('歌词服务暂时未返回有效结果，请稍后再试');
+        }
+        route = data?.proxy_route;
+        if (!data || (data.code !== undefined && Number(data.code) !== 200)) {
+            throw new Error(data?.msg || '歌词服务暂时不可用，请重试');
+        }
+        return data;
+    } finally {
+        tracking.finish(route);
     }
-    if (!data || (data.code !== undefined && Number(data.code) !== 200)) {
-        throw new Error(data?.msg || '歌词服务暂时不可用，请重试');
-    }
-    return data;
 }
 
 export async function searchSongs(key: string, artist: string, page: number, limit: number, signal?: AbortSignal): Promise<SongMatch[]> {

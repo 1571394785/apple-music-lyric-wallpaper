@@ -2,23 +2,28 @@ import './css/marquee.css';
 
 /** One constant-speed loop for all metadata fields. Never restarted by timeline ticks. */
 class MetadataMarquee {
+    private readonly viewport = document.createElement('span');
     private readonly track = document.createElement('span');
     private readonly content = document.createElement('span');
     private readonly duplicate = document.createElement('span');
     private animation?: Animation;
     private text = '';
-    private frame = 0;
+    distance = 0;
+    get isTitle() { return this.element.id === 'name'; }
     private resizeTimer?: number;
     private geometry = '';
     private readonly observer: ResizeObserver;
 
     constructor(private readonly element: HTMLElement) {
+        group.add(this);
         element.classList.add('metadata-marquee');
         this.track.className = 'metadata-marquee__track';
         this.content.className = this.duplicate.className = 'metadata-marquee__text';
         this.duplicate.setAttribute('aria-hidden', 'true');
         this.track.append(this.content, this.duplicate);
-        element.replaceChildren(this.track);
+        this.viewport.className = 'metadata-marquee__viewport';
+        this.viewport.append(this.track);
+        element.replaceChildren(this.viewport);
         this.observer = new ResizeObserver(() => this.scheduleResize());
         this.observer.observe(element);
         this.observer.observe(this.content);
@@ -38,11 +43,7 @@ class MetadataMarquee {
     }
 
     private schedule() {
-        if (this.frame) return;
-        this.frame = requestAnimationFrame(() => {
-            this.frame = 0;
-            this.measure();
-        });
+        scheduleGroup();
     }
 
     private scheduleResize() {
@@ -60,33 +61,63 @@ class MetadataMarquee {
         this.element.classList.remove('is-overflowing');
     }
 
-    private measure() {
+    measure() {
         const viewport = this.element.clientWidth;
         const width = this.content.getBoundingClientRect().width;
         const geometry = `${viewport}:${width}`;
-        if (geometry === this.geometry) return;
+        if (geometry === this.geometry) return false;
         this.geometry = geometry;
         this.stop();
-        if (viewport <= 0 || width <= viewport + 1) return;
+        this.distance = 0;
+        if (viewport <= 0 || width <= viewport + 1) return true;
 
         const pixelRatio = window.devicePixelRatio || 1;
-        const distance = Math.ceil((width + Math.max(40, viewport * 0.15)) * pixelRatio) / pixelRatio;
-        const gap = distance - width;
-        this.track.style.columnGap = `${gap}px`;
+        const gap = Math.max(24, Math.min(48, viewport * 0.12));
+        const distance = Math.ceil((width + gap) * pixelRatio) / pixelRatio;
+        this.track.style.columnGap = `${distance - width}px`;
         this.element.classList.add('is-overflowing');
-        // A full copy plus its gap is exactly one period: the loop boundary is invisible.
-        this.animation = this.track.animate([
-            { transform: 'translateX(0)' },
-            { transform: `translateX(-${distance}px)` },
-        ], {
-            duration: distance / 30 * 1000,
-            iterations: Infinity,
-            // Move one physical pixel per step instead of resampling glyphs between pixels.
-            easing: `steps(${Math.round(distance * pixelRatio)}, end)`,
-            delay: 1200,
-            fill: 'backwards',
-        });
+        this.distance = distance;
+        return true;
     }
+
+    play(travel: number, startTime: number) {
+        this.animation?.cancel();
+        if (!this.distance) return;
+        const distance = this.distance;
+        const pixelRatio = window.devicePixelRatio || 1;
+        const pause = 2500;
+        const duration = pause + travel;
+        const step = `steps(${Math.max(1, Math.round(distance * pixelRatio))}, end)`;
+        this.animation = this.track.animate([
+            { transform: 'translateX(0)', offset: 0 },
+            { transform: 'translateX(0)', offset: pause / duration, easing: step },
+            { transform: `translateX(-${distance}px)`, offset: 1 },
+        ], {
+            duration,
+            iterations: Infinity,
+        });
+        this.animation.startTime = startTime;
+
+    }
+}
+
+// Measure every field together, then give every animation the same cycle and origin.
+const group = new Set<MetadataMarquee>();
+let groupFrame = 0;
+function scheduleGroup() {
+    if (groupFrame) return;
+    groupFrame = requestAnimationFrame(() => {
+        groupFrame = 0;
+        let changed = false;
+        for (const item of group) changed = item.measure() || changed;
+        if (!changed) return;
+        const active = [...group].filter(item => item.distance > 0);
+        const leader = active.find(item => item.isTitle) || active[0];
+        if (!leader) return;
+        const travel = leader.distance / 30 * 1000;
+        const startTime = Number(document.timeline.currentTime ?? performance.now());
+        for (const item of group) item.play(travel, startTime);
+    });
 }
 
 const instances = new WeakMap<HTMLElement, MetadataMarquee>();

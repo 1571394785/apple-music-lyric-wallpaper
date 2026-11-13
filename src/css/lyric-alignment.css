@@ -1,0 +1,14 @@
+/* AMLL 0.1.x translates dots by (padding - 20px), while lyric text starts at
+   padding + (1.05em - 1em). Compensate for that offset without changing its
+   animated transform. A left origin keeps breathing from shifting the first dot. */
+#lyric-player .lyric-interlude-dots {
+    left: calc(20px + .05em);
+    transform-origin: left center;
+}
+
+/* Match AMLL's compact lyric-line padding (1em instead of 1.05em). */
+@media (max-width: 1024px) {
+    #lyric-player .lyric-interlude-dots {
+        left: 20px;
+    }
+}

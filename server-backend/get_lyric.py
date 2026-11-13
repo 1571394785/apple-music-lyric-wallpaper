@@ -106,11 +106,26 @@ def search_song(cache_key: str, song_name: str):
     写入歌词缓存(cache_key, data)
     return data
 print("Content-type:text/json;charset=utf-8")
+print("Cache-Control: no-store")
 print()
 初始化缓存()
 query = 获取get参数()
 if os.environ.get("REQUEST_METHOD", "GET").upper() == "POST":
     query.update(获取post参数())
+
+from qqmusic_api.utils.proxy_route import configure_proxy
+if "proxy_status" in query:
+    from proxy_status import read
+    print(json.dumps(read(query["proxy_status"])))
+    exit()
+configure_proxy(query.get("proxy", "0"), query.get("proxy_request_id", ""))
+
+def response_data(data):
+    from qqmusic_api.utils.proxy_route import get_route
+    route = get_route()
+    if route is not None and isinstance(data, dict):
+        return {**data, "proxy_route": route.result(bool(data.get("cache_hit")))}
+    return data
 
 if query.get("v", query.get("version", "")) in ("2", "v2"):
     try:
@@ -120,7 +135,7 @@ if query.get("v", query.get("version", "")) in ("2", "v2"):
         import traceback
         traceback.print_exc(file=sys.stderr)
         data = {"code": 502, "version": 2, "msg": "音乐服务暂时不可用，请稍后重试"}
-    print(json.dumps(data, ensure_ascii=False))
+    print(json.dumps(response_data(data), ensure_ascii=False))
     exit()
 
 if "key" not in query:
@@ -139,4 +154,4 @@ if song_artist:
 else:
     cache_key = song_name
     data = search_song(cache_key, song_name)
-print(json.dumps(data))
+print(json.dumps(response_data(data)))

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "pack:wallpaper": "npm run build && node scripts/copy-wallpaper.mjs",
     "preview": "vite preview"
   },
   "devDependencies": {

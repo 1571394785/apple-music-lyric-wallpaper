@@ -1,4 +1,5 @@
 import { searchSongs, type SongMatch } from './lyric';
+import { observeProxy } from './lyric-proxy';
 import './css/lyric-search.css';
 import { getDisplacementFilter } from './vendor/liquid-glass';
 
@@ -14,6 +15,17 @@ export function createLyricSearch(options: Options) {
     const cover = document.querySelector<HTMLButtonElement>('#cover')!;
     const back = document.querySelector<HTMLElement>('#lyric-search')!;
     const home = back.parentElement!;
+    const proxyStatus = back.querySelector<HTMLElement>('[data-proxy-status]')!;
+    observeProxy(state => {
+        proxyStatus.hidden = state === 'off';
+        proxyStatus.dataset.state = state;
+        proxyStatus.textContent = {
+            off: '', ready: '代理已启用 · 等待请求', waiting: '正在连接代理…',
+            proxy: '已使用代理', fallback: '代理失败，已回退直连',
+            cache: '已命中缓存 · 未请求代理', unknown: '代理状态暂不可确认',
+        }[state];
+        proxyStatus.title = proxyStatus.textContent;
+    });
     const app = document.querySelector<HTMLElement>('#app')!;
     const modal = document.createElement('div');
     modal.className = 'lyric-search-modal';

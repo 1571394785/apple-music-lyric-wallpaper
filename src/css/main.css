@@ -1,3 +1,9 @@
+:root {
+    --artwork-size: min(50vmin, 42vw);
+    --lyric-gap: 2vw;
+    --lyric-right-padding: 2vw;
+}
+
 #bg {
     background-color: #ff9797;
     height: 100vh;
@@ -19,9 +25,9 @@ body {
     position: fixed;
     z-index: 1;
     top: 0;
-    right: 0;
+    left: calc(25vw + var(--artwork-size) / 2 + var(--lyric-gap));
+    right: var(--lyric-right-padding);
     bottom: 0;
-    width: 50vw;
     padding: 0;
     box-sizing: border-box;
     overflow: hidden;
@@ -64,8 +70,8 @@ body {
     position: absolute;
     top: 40vh;
     left: 25vw;
-    width: min(50vmin, 42vw);
-    height: min(50vmin, 42vw);
+    width: var(--artwork-size);
+    height: var(--artwork-size);
     transform: translateY(-50%) translateX(-50%);
     transition: 1s;
     /* Metadata uses the same short-edge scale in both orientations. */
