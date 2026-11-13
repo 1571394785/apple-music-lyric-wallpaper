@@ -6,8 +6,8 @@
 #progress-material #progress, #progress-material #progress_bar { position: absolute; inset: 0 auto auto 0; height: 100%; border-radius: 99px; backdrop-filter: none; }
 #progress-material #progress { width: 100%; background: #ffffff38; }
 #progress-material #progress_bar { background: #ffffffb3; }
-#progress-material.has-liquid-material #progress { background: #ffffff08; }
-#progress-material.has-liquid-material #progress_bar { background: #ffffff35; }
+#progress-material.has-liquid-material #progress { background: #ffffff24; }
+#progress-material.has-liquid-material #progress_bar { background: #ffffff45; }
 .cover-card__back.has-liquid-material { background: transparent; border-color: transparent; box-shadow: none; }
 .has-liquid-material .lyric-search__modes, .has-liquid-material .lyric-search__query, .has-liquid-material .lyric-search__results { background: transparent; border-color: transparent; }
 .has-liquid-material .lyric-search__header button, .has-liquid-material .lyric-search__pages button { background: transparent; box-shadow: none; }
@@ -15,3 +15,6 @@
 .has-liquid-material .lyric-search__modes [aria-pressed='true'] { background: #ffffff26; }
 .has-liquid-material .lyric-search__query button { background: #168aff55; box-shadow: none; }
 .has-liquid-material .lyric-search__song:hover { background: #ffffff14; }
+.has-liquid-material .lyric-search__modes { background: #00000010; }
+.has-liquid-material .lyric-search__query { background: #ffffff09; }
+.has-liquid-material .lyric-search__header button, .has-liquid-material .lyric-search__pages button { background: #ffffff0c; }

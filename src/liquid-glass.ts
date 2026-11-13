@@ -20,29 +20,18 @@ class GlassScene {
     private lastPaint = -Infinity;
     private lastConfigs: string[] = [];
     private lastRects: string[] = [];
-    private cleanups: Array<() => void> = [];
 
     constructor(private host: HTMLElement, private materials: Material[]) {
         this.root.className = 'liquid-material-layer';
         this.root.setAttribute('aria-hidden', 'true');
         this.background.className = 'liquid-material-source';
         this.root.appendChild(this.background);
-        for (const material of materials) {
+        for (const _material of materials) {
             const surface = document.createElement('div');
             surface.className = 'liquid-material-surface';
             this.root.appendChild(surface);
             this.surfaces.push(surface);
-            if (material.config.button) {
-                // Forward only visual feedback; the original button owns actions.
-                for (const type of ['pointerover', 'pointerout', 'pointerdown', 'pointerup', 'pointercancel']) {
-                    const forward = () => {
-                        if (!(material.element instanceof HTMLButtonElement) || !material.element.disabled)
-                            surface.dispatchEvent(new Event(type));
-                    };
-                    material.element.addEventListener(type, forward);
-                    this.cleanups.push(() => material.element.removeEventListener(type, forward));
-                }
-            }
+
         }
         host.prepend(this.root);
         this.syncGeometry();
@@ -56,8 +45,8 @@ class GlassScene {
             if (this.destroyed) return;
             const instance = await LiquidGlass.init({
                 root: this.root, glassElements: this.surfaces,
-                defaults: { refraction: .8, chromAberration: .035, edgeHighlight: .12,
-                    specular: .15, fresnel: .8, shadowOpacity: .12, shadowSpread: 5, floating: false },
+                defaults: { refraction: .35, chromAberration: .008, edgeHighlight: .025,
+                    specular: .035, fresnel: .18, shadowOpacity: 0, shadowSpread: 2, shadowOffsetY: 1, floating: false },
             });
             if (this.destroyed) { instance.destroy(); return; }
             this.instance = instance;
@@ -133,28 +122,28 @@ class GlassScene {
         scenes.delete(this);
         this.instance?.destroy();
         this.instance = undefined;
-        for (const cleanup of this.cleanups) cleanup();
-        this.cleanups = [];
         this.root.remove();
         this.host.classList.remove('has-liquid-material');
     }
 }
 
+// One surface per scene: never composite nested glass on top of glass.
 export function createProgressGlass() {
     return new GlassScene(document.querySelector<HTMLElement>('#progress-material')!, [
-        { element: document.querySelector<HTMLElement>('#progress')!, config: { blurAmount: .06, refraction: .8, brightness: .015, opacity: .82, shadowOpacity: .06 } },
-        { element: document.querySelector<HTMLElement>('#progress_bar')!, config: { blurAmount: .04, refraction: 1.05, brightness: .24, edgeHighlight: .3, specular: .35 } },
+        { element: document.querySelector<HTMLElement>('#progress_bar')!, config: {
+            blurAmount: 0, refraction: .45, brightness: .12,
+            edgeHighlight: .045, specular: .055, fresnel: .22, zRadius: 3,
+        } },
     ]);
 }
 
 export function createSearchGlass(panel: HTMLElement) {
-    const elements = (selector: string) => [...panel.querySelectorAll<HTMLElement>(selector)];
     return new GlassScene(panel, [
-        { element: panel, config: { blurAmount: .22, refraction: .85, brightness: -.18, zRadius: 24, shadowOpacity: .2 } },
-        ...elements('.lyric-search__modes, .lyric-search__query, .lyric-search__results').map(element =>
-            ({ element, config: { blurAmount: .08, refraction: .55, brightness: .015, edgeHighlight: .08, shadowOpacity: 0 } })),
-        ...elements('.lyric-search__header button, .lyric-search__modes button, .lyric-search__query button, .lyric-search__pages button').map(element =>
-            ({ element, config: { button: true, blurAmount: .04, refraction: 1, brightness: .045, edgeHighlight: .16, zRadius: 14, shadowOpacity: .08 } })),
+        { element: panel, config: {
+            blurAmount: .12, refraction: .32, brightness: -.09, zRadius: 7,
+            edgeHighlight: .025, specular: .025, fresnel: .15,
+            shadowOpacity: .025, shadowSpread: 3, shadowOffsetY: 1,
+        } },
     ]);
 }
 
