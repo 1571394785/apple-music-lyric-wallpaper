@@ -4,8 +4,8 @@ import './css/liquid-glass.css';
 type Material = { element: HTMLElement; config: Partial<GlassConfig> };
 const scenes = new Set<GlassScene>();
 export const progressGlassDefaults = {
-    refraction: .85, edgeHighlight: .015, specular: .01, fresnel: .07,
-    zRadius: 3, brightness: .12,
+    refraction: .69, edgeHighlight: .02, specular: .32, fresnel: 1.5,
+    zRadius: 3, brightness: -.2,
 };
 export const progressGlassSettings = { ...progressGlassDefaults };
 export function updateProgressGlass(values: Partial<typeof progressGlassSettings>) {
